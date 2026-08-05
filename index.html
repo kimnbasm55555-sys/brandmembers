@@ -6,7 +6,9 @@
 <title>브랜드멤버스</title>
 <meta property="og:title" content="브랜드멤버스">
 <meta property="og:description" content="단골 매장의 소식과 스탬프, 다양한 쿠폰을 한 곳에서 모아서 사용하세요.">
-<meta property="og:image" content="https://brandmembers.vercel.app/icon-512.png">
+<meta property="og:image" content="https://brandmembers.vercel.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="브랜드멤버스">
 <link rel="manifest" href="manifest.json">
@@ -523,13 +525,13 @@
 
 <!-- 첫 진입 가림막 : 어느 화면을 보여줄지 정해질 때까지 깜빡임 방지 -->
 <div id="bootMask" style="position:fixed;inset:0;z-index:9999;background:#ffffff;display:flex;align-items:center;justify-content:center">
-  <svg viewBox="0 0 24 24" fill="none" stroke="#3b4cca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;opacity:.9"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="#3b4cca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;opacity:.9"><path d="M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9"/></svg>
 </div>
 
 <!-- 앱 설치 의무 게이트 : 설치 안 하면 여기서 막힘 (손님·직원·사장 공통) -->
 <div id="installGate" style="display:none;position:fixed;inset:0;z-index:99998;background:#fff;flex-direction:column;align-items:center;justify-content:center;padding:32px 26px;text-align:center;overflow-y:auto">
   <div style="width:72px;height:72px;border-radius:20px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#3b4cca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:38px;height:38px"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="#3b4cca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:38px;height:38px"><path d="M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9"/></svg>
   </div>
   <div style="font-size:22px;font-weight:800;color:#1a1d24;margin-bottom:10px">앱을 먼저 설치해 주세요</div>
   <div id="ig-desc" style="font-size:14px;color:#8a909a;line-height:1.6;margin-bottom:26px;max-width:320px">홈 화면에 앱을 추가하면 더 빠르고 편하게 쓸 수 있어요.<br>설치 후 열어야 스탬프·출퇴근이 정상 작동해요.</div>
@@ -539,12 +541,20 @@
     📲 앱 설치하기
   </button>
 
+  <!-- 안드로이드: 자동 설치가 안 될 때 수동 안내 (버튼 눌렀는데 반응 없을 때 펼침) -->
+  <div id="ig-manual" style="display:none;width:100%;max-width:340px;text-align:left;background:#f7f8fa;border-radius:16px;padding:18px 18px;margin-top:14px">
+    <div style="font-size:13px;font-weight:800;color:#1a1d24;margin-bottom:12px">설치 버튼이 안 되면 이렇게 해주세요</div>
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:11px"><span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#3b4cca;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">1</span><span style="font-size:13px;color:#4a5158;line-height:1.5">크롬 오른쪽 위 <b>⋮ (점 3개)</b>를 누르세요</span></div>
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:11px"><span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#3b4cca;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">2</span><span style="font-size:13px;color:#4a5158;line-height:1.5"><b>"앱 설치"</b> 또는 <b>"홈 화면에 추가"</b>를 선택</span></div>
+    <div style="display:flex;gap:10px;align-items:flex-start"><span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#3b4cca;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">3</span><span style="font-size:13px;color:#4a5158;line-height:1.5"><b>"설치"</b>를 누르면 완료!</span></div>
+  </div>
+
   <!-- iOS: 홈 화면 추가 안내 -->
   <div id="ig-ios" style="display:none;width:100%;max-width:340px;text-align:left;background:#f7f8fa;border-radius:16px;padding:18px 18px">
     <div style="font-size:13px;font-weight:700;color:#1a1d24;margin-bottom:12px">아이폰은 Safari(사파리)에서 이렇게 설치해요</div>
-    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:11px"><span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#465fff;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">1</span><span style="font-size:13px;color:#4a5158;line-height:1.5">하단 <b>공유 버튼</b> <span style="display:inline-block;vertical-align:-3px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13"/><path d="M8 6l4-4 4 4"/><path d="M4 12v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8"/></svg></span> 을 누르세요</span></div>
-    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:11px"><span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#465fff;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">2</span><span style="font-size:13px;color:#4a5158;line-height:1.5"><b>"홈 화면에 추가"</b>를 선택</span></div>
-    <div style="display:flex;gap:10px;align-items:flex-start"><span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#465fff;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">3</span><span style="font-size:13px;color:#4a5158;line-height:1.5">오른쪽 위 <b>"추가"</b>를 누르면 완료!</span></div>
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:11px"><span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#3b4cca;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">1</span><span style="font-size:13px;color:#4a5158;line-height:1.5">하단 <b>공유 버튼</b> <span style="display:inline-block;vertical-align:-3px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13"/><path d="M8 6l4-4 4 4"/><path d="M4 12v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8"/></svg></span> 을 누르세요</span></div>
+    <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:11px"><span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#3b4cca;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">2</span><span style="font-size:13px;color:#4a5158;line-height:1.5"><b>"홈 화면에 추가"</b>를 선택</span></div>
+    <div style="display:flex;gap:10px;align-items:flex-start"><span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#3b4cca;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">3</span><span style="font-size:13px;color:#4a5158;line-height:1.5">오른쪽 위 <b>"추가"</b>를 누르면 완료!</span></div>
   </div>
 
   <!-- 인앱 브라우저(카톡 등): Safari/크롬으로 열기 -->
@@ -565,7 +575,7 @@
 <div id="introView" class="intro-wrap">
   <div class="intro-top">
     <div class="intro-logo" id="introLogo">
-      <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><g stroke-width="7.8" stroke-linecap="round"><path d="M34 5 L31.5 30" stroke="#3b4cca"/><path d="M54 13 L34 30" stroke="#5b6ce0"/><path d="M59 33 L34 32.5" stroke="#3b4cca"/><path d="M49 53 L33 35" stroke="#ffa552"/><path d="M27 60 L30.5 35" stroke="#3b4cca"/><path d="M10 47 L29 34.5" stroke="#5b6ce0"/><path d="M5 26 L29 31" stroke="#3b4cca"/><path d="M20 9 L30 29" stroke="#ffa552"/></g></svg>
+      <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><g stroke="#3b4cca" stroke-width="7" stroke-linecap="round"><path d="M32 30.4L32 6"/><path d="M33.6 31.3L48.5 22.7"/><path d="M33.6 32.7L54.6 44.9"/><path d="M32 33.6L32 50.3"/><path d="M30.4 32.7L9.4 44.9"/><path d="M30.4 31.3L15.5 22.7"/></g></svg>
     </div>
     <div class="intro-brand" id="introBrand">브랜드멤버스</div>
     <span class="intro-badge" id="introBadge"></span>
@@ -610,7 +620,7 @@
 
 <div id="authView" class="auth-wrap">
   <div class="auth-ic">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9"/></svg>
   </div>
   <div class="auth-title" id="authTitle">단골 멤버스 시작하기</div>
   <div class="auth-sub" id="authSub">단골 매장의 소식과 쿠폰, 스탬프를<br>한 곳에서 모아보세요.</div>
@@ -1023,7 +1033,7 @@
 <div id="mainView" class="hidden">
   <div class="hd" id="brandHd">
     <div class="hd-ic" id="hdIc">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9"/></svg>
     </div>
     <div class="hd-txt">
       <div class="hd-label" id="hdLabel">스탬프 적립</div>
@@ -1067,7 +1077,7 @@
 
       <div class="card">
         <div class="card-t">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/></svg>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9"/></svg>
           내 쿠폰
         </div>
         <div id="couponList"><div class="empty">보유한 쿠폰이 없습니다.</div></div>
@@ -2416,8 +2426,13 @@ function igInstall(){
       }
     });
   }else{
-    // deferredPrompt가 아직 없으면 (혹은 지원 안 하면) 안내
-    toast("브라우저 메뉴에서 '홈 화면에 추가'를 눌러 설치해 주세요");
+    // deferredPrompt가 아직 없음 → 크롬 메뉴 수동 설치 안내를 화면에 표시
+    var man=$("ig-manual");
+    if(man){
+      man.style.display="block";
+      try{ man.scrollIntoView({behavior:"smooth",block:"center"}); }catch(e){}
+    }
+    toast("브라우저 메뉴(⋮)에서 '앱 설치'를 눌러주세요");
   }
 }
 // 감지 오류 탈출구 : 이미 설치했는데 standalone 감지가 틀린 경우
@@ -2573,7 +2588,7 @@ var _scLoadedOnce=false;
 function _scDemoCards(){
   var goal=12;
   var demos=[
-    { nm:"굽네치킨 서강점", color:"#465fff", show:12, ready:true, cpn:2,
+    { nm:"굽네치킨 서강점", color:"#3b4cca", show:12, ready:true, cpn:2,
       video:true, img:true, title:"여름 신메뉴 2+1 이벤트", body:"매장 방문 시 음료 무료 증정", period:"D-5" },
     { nm:"교촌치킨 홍대점", color:"#e5484d", show:8, ready:false, cpn:1,
       video:true, img:false, title:"신메뉴 출시 기념 할인", body:"", period:"D-2" },
@@ -2809,7 +2824,7 @@ function _scPeriod(ev){
 
 // 매장 코드로 로고 색 고정 (브랜드 느낌)
 function _scColorFor(code){
-  var pal=["#465fff","#12b886","#f97316","#e5484d","#8b5cf6","#0ea5e9","#f59e0b","#ec4899"];
+  var pal=["#3b4cca","#12b886","#f97316","#e5484d","#8b5cf6","#0ea5e9","#f59e0b","#ec4899"];
   var h=0; code=code||""; for(var i=0;i<code.length;i++){ h=(h*31+code.charCodeAt(i))>>>0; }
   return pal[h%pal.length];
 }
@@ -5228,7 +5243,7 @@ async function _applyBrandHeader(code){
     ic.textContent=initial;
   }else{
     // 브랜드 미등록 → 브랜드노트 기본 로고(별)
-    ic.innerHTML="<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:22px;height:22px'><path d='M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6z'/></svg>";
+    ic.innerHTML="<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:22px;height:22px'><path d='M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9'/></svg>";
   }
   try{ window._brandLogoUrl=logo||""; }catch(e){}
   if(color){
