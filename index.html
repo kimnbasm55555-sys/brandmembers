@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>브랜드노트</title>
-<meta property="og:title" content="브랜드노트">
-<meta property="og:description" content="우리 매장 멤버스가 되어 스탬프·쿠폰 등 단골 혜택을 받아보세요.">
-<meta property="og:image" content="https://brandnote-zeta.vercel.app/icon-512.png">
+<title>브랜드멤버스</title>
+<meta property="og:title" content="브랜드멤버스">
+<meta property="og:description" content="단골 매장의 소식과 스탬프, 다양한 쿠폰을 한 곳에서 모아서 사용하세요.">
+<meta property="og:image" content="https://brandmembers.vercel.app/icon-512.png">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="브랜드노트">
-<link rel="manifest" href="manifest-customer.json">
+<meta property="og:site_name" content="브랜드멤버스">
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff7043">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="브랜드노트">
+<meta name="apple-mobile-web-app-title" content="브랜드멤버스">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -208,7 +208,7 @@
   .pwa-ios-card{background:#fff;border-radius:22px;padding:26px 22px 20px;max-width:360px;width:100%;
     box-shadow:0 24px 60px -12px rgba(0,0,0,.4);text-align:center;animation:pwaPop .3s ease;}
   @keyframes pwaPop{from{opacity:0;transform:scale(.94);}to{opacity:1;transform:scale(1);}}
-  .pwa-ios-logo{width:60px;height:60px;border-radius:15px;overflow:hidden;margin:0 auto 14px;box-shadow:0 8px 20px -6px rgba(70,95,255,.5);}
+  .pwa-ios-logo{width:60px;height:60px;border-radius:15px;overflow:hidden;margin:0 auto 14px;box-shadow:0 8px 20px -6px rgba(255,112,67,.5);}
   .pwa-ios-logo img{width:100%;height:100%;object-fit:cover;}
   .pwa-ios-title{font-size:19px;font-weight:800;color:#1e293b;letter-spacing:-.4px;margin-bottom:8px;}
   .pwa-ios-desc{font-size:13px;color:#64748b;line-height:1.6;margin-bottom:20px;}
@@ -260,7 +260,7 @@
 
   .hd{background:linear-gradient(135deg,var(--primary),#3547d4);border-bottom:none;padding:20px 18px;
     display:flex;align-items:center;gap:13px;position:sticky;top:0;z-index:10;
-    box-shadow:0 2px 14px rgba(70,95,255,.22);}
+    box-shadow:0 2px 14px rgba(255,112,67,.22);}
   .hd-ic{width:50px;height:50px;border-radius:14px;background:rgba(255,255,255,.18);backdrop-filter:blur(4px);
     display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;overflow:hidden;
     font-size:22px;font-weight:800;border:1.5px solid rgba(255,255,255,.3);}
@@ -299,7 +299,7 @@
   .stamp-mark.brand-mark svg{width:82%;height:82%;}
   /* 찍힌 도장: 채워진 원 + 흰 심볼 */
   .stamp.on{background:var(--primary);border:2px solid var(--primary);border-style:solid;
-    box-shadow:0 3px 8px rgba(70,95,255,.28);animation:stampPop .3s ease;}
+    box-shadow:0 3px 8px rgba(255,112,67,.28);animation:stampPop .3s ease;}
   .stamp.on .stamp-mark svg{fill:#fff;stroke:#fff;}
   .stamp.done{background:linear-gradient(135deg,#ffb020,#ff8a3d);border:2px solid #ff8a3d;
     box-shadow:0 3px 10px rgba(255,138,61,.4);animation:stampPop .3s ease;}
@@ -1597,7 +1597,7 @@ function renderStaffMe(){
       '<div onclick="doWithdraw()" style="padding:16px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer">'+
         '<span style="font-size:14.5px;font-weight:600;color:#e5484d">회원 탈퇴</span><span style="color:#c4cad2">›</span></div>'+
     '</div>'+
-    '<div style="text-align:center;margin-top:24px;font-size:11.5px;color:#c4cad2;line-height:1.8">브랜드노트 v'+CUST_APP_VERSION+'<br>문의 010-5175-3816</div>';
+    '<div style="text-align:center;margin-top:24px;font-size:11.5px;color:#c4cad2;line-height:1.8">브랜드멤버스 v'+CUST_APP_VERSION+'<br>문의 010-5175-3816</div>';
   // 알림 상태 표시
   try{
     var pushEl=$("staff-push-state");
@@ -2978,7 +2978,7 @@ function shareCustHome(){
   try{
     if(typeof custKakaoReady==='function' && custKakaoReady() && Kakao.Share){
       var s = (_storeData && _storeData.length) ? _storeData[0] : null;
-      var title = s ? (esc(s.name)+" 단골 멤버스") : "브랜드노트 멤버스";
+      var title = s ? (esc(s.name)+" 단골 멤버스") : "브랜드멤버스";
       Kakao.Share.sendDefault({
         objectType:'feed',
         content:{
@@ -3309,7 +3309,7 @@ async function enterMain(){
         var _inapp=(typeof _custInappName==="function") ? _custInappName() : null;
         if(_inapp){
           // 카톡 등 인앱 브라우저 → 설치 여부와 무관하게 '앱으로 열어라'
-          $("ig-desc").innerHTML="✅ 직원 등록 완료!<br>이미 앱을 설치하셨다면 <b>홈 화면의 브랜드노트 앱</b>을 열어주세요.<br>아직이면 아래 버튼으로 "+((/iphone|ipad|ipod/.test((navigator.userAgent||'').toLowerCase()))?"Safari":"크롬")+"에서 열어 설치하세요.";
+          $("ig-desc").innerHTML="✅ 직원 등록 완료!<br>이미 앱을 설치하셨다면 <b>홈 화면의 브랜드멤버스 앱</b>을 열어주세요.<br>아직이면 아래 버튼으로 "+((/iphone|ipad|ipod/.test((navigator.userAgent||'').toLowerCase()))?"Safari":"크롬")+"에서 열어 설치하세요.";
         }else{
           $("ig-desc").innerHTML="✅ 직원 등록 완료!<br>이제 앱을 설치하면 출퇴근을 쓸 수 있어요.<br>설치 후 <b>앱 아이콘</b>으로 열고 전화번호로 로그인하세요.";
         }
@@ -5207,9 +5207,9 @@ async function _applyBrandHeader(code){
   }
   var brandName=name||"";
   BRAND_NAME=brandName;   // 스탬프 도장 글자용
-  // 앱 이름: app_name 지정 있으면 그것, 없으면 "브랜드명 고객멤버스", 브랜드도 없으면 "브랜드노트 고객멤버스"
+  // 앱 이름: app_name 지정 있으면 그것, 없으면 "브랜드명 고객멤버스", 브랜드도 없으면 "브랜드멤버스"
   if(!appName){
-    appName = brandName ? (brandName+" 고객멤버스") : "브랜드노트 고객멤버스";
+    appName = brandName ? (brandName+" 고객멤버스") : "브랜드멤버스";
   }
   var label=$("hdLabel"), big=$("hdBrand"), ic=$("hdIc"), hd=$("brandHd");
   // 매장명(윗줄 라벨) 제거 → 앱 이름만 크게
@@ -5243,7 +5243,7 @@ async function _applyBrandHeader(code){
   // 인트로 화면에도 브랜드명·로고 반영 (브랜드 없으면 브랜드노트 기본 유지)
   try{
     var iBrand=$("introBrand"), iLogo=$("introLogo");
-    if(iBrand){ iBrand.textContent = brandName || "브랜드노트"; }
+    if(iBrand){ iBrand.textContent = brandName || "브랜드멤버스"; }
     if(iLogo && logo){ iLogo.innerHTML="<img src='"+esc(logo)+"' alt=''>"; }
     // 로고 없으면 마크업의 브랜드노트 갈래 로고를 그대로 둔다
   }catch(e){}
@@ -6027,7 +6027,7 @@ async function demoEnter(){
       var _rv=(_ctx && _ctx.role) ? _ctx.role : JOIN_ROLE;
       var _r=(_rv==="manager"?"매니저":(_rv==="owner"?"사장님":"직원"));
       var iB=$("introBrand"), iBd=$("introBadge"), iH=$("introHeadline"), iD=$("introDesc");
-      if(iB) iB.textContent=STORE_NAME||_ctxStoreName||"브랜드노트";
+      if(iB) iB.textContent=STORE_NAME||_ctxStoreName||"브랜드멤버스";
       if(iBd){ iBd.textContent="👋 "+_r+" 합류"; iBd.classList.add("on"); }
       if(iH) iH.innerHTML="함께 일하게 되어<br><span class='pt'>반가워요!</span>";
       if(iD) iD.innerHTML="<b>"+_storeLabel+"</b>의 직원 공간이에요.<br>출퇴근 체크와 근무 기록을 여기서 해요.<br>출근·퇴근은 <b>매장 QR</b>을 찍으면 자동 기록!";
