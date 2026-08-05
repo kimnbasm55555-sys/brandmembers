@@ -1,0 +1,32 @@
+{
+  "name": "브랜드멤버스",
+  "short_name": "브랜드멤버스",
+  "description": "단골 매장의 소식과 스탬프, 다양한 쿠폰을 한 곳에서 모아서 사용하세요.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ff7043",
+  "lang": "ko-KR",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
