@@ -525,15 +525,15 @@
 
 <!-- 첫 진입 가림막 : 어느 화면을 보여줄지 정해질 때까지 깜빡임 방지 -->
 <div id="bootMask" style="position:fixed;inset:0;z-index:9999;background:#ffffff;display:flex;align-items:center;justify-content:center">
-  <svg viewBox="0 0 24 24" fill="none" stroke="#3b4cca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;opacity:.9"><path d="M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9"/></svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="#3b4cca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;opacity:.9"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M12 4v16" stroke-dasharray="2 3"/></svg>
 </div>
 
 <!-- 앱 설치 의무 게이트 : 설치 안 하면 여기서 막힘 (손님·직원·사장 공통) -->
 <div id="installGate" style="display:none;position:fixed;inset:0;z-index:99998;background:#fff;flex-direction:column;align-items:center;justify-content:center;padding:32px 26px;text-align:center;overflow-y:auto">
   <div style="width:72px;height:72px;border-radius:20px;background:var(--primary-soft);display:flex;align-items:center;justify-content:center;margin-bottom:20px">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#3b4cca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:38px;height:38px"><path d="M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="#3b4cca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:38px;height:38px"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M12 4v16" stroke-dasharray="2 3"/></svg>
   </div>
-  <div style="font-size:22px;font-weight:800;color:#1a1d24;margin-bottom:10px">앱을 먼저 설치해 주세요</div>
+  <div style="font-size:22px;font-weight:800;color:#1a1d24;margin-bottom:10px">앱을 먼저 설치해 주세요 ✨</div>
   <div id="ig-desc" style="font-size:14px;color:#8a909a;line-height:1.6;margin-bottom:26px;max-width:320px">홈 화면에 앱을 추가하면 더 빠르고 편하게 쓸 수 있어요.<br>설치 후 열어야 스탬프·출퇴근이 정상 작동해요.</div>
 
   <!-- 안드로이드/설치 가능: 설치 버튼 -->
@@ -570,7 +570,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v3.0.0 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v4.0.0 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -622,7 +622,7 @@
 
 <div id="authView" class="auth-wrap">
   <div class="auth-ic">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M12 4v16" stroke-dasharray="2 3"/></svg>
   </div>
   <div class="auth-title" id="authTitle">단골 멤버스 시작하기</div>
   <div class="auth-sub" id="authSub">단골 매장의 소식과 쿠폰, 스탬프를<br>한 곳에서 모아보세요.</div>
@@ -1035,7 +1035,7 @@
 <div id="mainView" class="hidden">
   <div class="hd" id="brandHd">
     <div class="hd-ic" id="hdIc">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M12 4v16" stroke-dasharray="2 3"/></svg>
     </div>
     <div class="hd-txt">
       <div class="hd-label" id="hdLabel">스탬프 적립</div>
@@ -1079,7 +1079,7 @@
 
       <div class="card">
         <div class="card-t">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11.4L12 2.8M12.6 11.7L17.4 8.9M12.6 12.3L20 16.6M12 12.6L12 18.3M11.4 12.3L4 16.6M11.4 11.7L6.6 8.9"/></svg>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M12 4v16" stroke-dasharray="2 3"/></svg>
           내 쿠폰
         </div>
         <div id="couponList"><div class="empty">보유한 쿠폰이 없습니다.</div></div>
@@ -1238,7 +1238,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "3.0.0";
+const CUST_APP_VERSION = "4.0.0";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
