@@ -570,7 +570,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v2.0.0 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v3.0.0 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1238,7 +1238,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "2.0.0";
+const CUST_APP_VERSION = "3.0.0";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
@@ -2147,6 +2147,27 @@ var _updateReloading = false;
 
 async function initAutoUpdate(){
   if(!("serviceWorker" in navigator)) return;
+
+  // ★ 일회성 강제 캐시 정리 (2026-08 배포) — 옛 서비스워커가 로고 등을 캐시에 붙들고 있는 문제 해결
+  // 이 플래그가 없으면 한 번만 실행: 모든 캐시 삭제 + 옛 워커 해제 → 새로고침
+  try{
+    var _purgeFlag = "bm_cache_purge_v2";
+    if(!localStorage.getItem(_purgeFlag)){
+      localStorage.setItem(_purgeFlag, "1");
+      // 모든 캐시 스토리지 삭제
+      if(window.caches){
+        var keys = await caches.keys();
+        await Promise.all(keys.map(function(k){ return caches.delete(k); }));
+      }
+      // 기존 서비스워커 전부 해제
+      var regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(function(r){ return r.unregister(); }));
+      // 강제 새로고침 (캐시 무시) — 다음 로드부터 최신 파일
+      location.reload();
+      return;
+    }
+  }catch(e){}
+
   try{
     var reg = await navigator.serviceWorker.register("service-worker.js");
 
