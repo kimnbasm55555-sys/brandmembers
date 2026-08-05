@@ -59,21 +59,33 @@
     scroll-padding-left:16px}
   .sc-track::-webkit-scrollbar{display:none}
   .sc-track>.sc-edge{flex:0 0 5px}   /* 좌우 여백 확보용 */
-  .sc-card{flex:0 0 86%;scroll-snap-align:center;background:var(--card);border:0.5px solid var(--line);
-    border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
-  .sc-head{padding:13px 15px 10px;display:flex;align-items:center;gap:8px;border-bottom:0.5px solid #f1f3f6}
+  .sc-card{flex:0 0 88%;scroll-snap-align:center;background:var(--card);border:0.5px solid var(--line);
+    border-radius:16px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
+  .sc-head{padding:13px 15px 10px;display:flex;align-items:center;gap:8px;border-bottom:0.5px solid #f1f3f6;flex-shrink:0}
   .sc-logo{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;
     font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
   .sc-nm{font-size:14px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
-  .sc-body{padding:12px 15px}
+  .sc-body{padding:12px 15px;display:flex;flex-direction:column;flex:1;min-height:560px}   /* ★ 카드 높이 고정 */
   .sc-evtag{font-size:11px;font-weight:700;color:#aab3bd;margin-bottom:6px}
-  .sc-ev{position:relative;width:100%;padding-bottom:56.25%;border-radius:12px;overflow:hidden;background:#111;margin-bottom:14px;cursor:pointer;line-height:0}
+  /* 영상 슬롯 (16:9) */
+  .sc-ev{position:relative;width:100%;padding-bottom:56.25%;border-radius:12px;overflow:hidden;background:#111;margin-bottom:10px;cursor:pointer;line-height:0}
   .sc-ev img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .sc-ev iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
   .sc-ev-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;gap:8px;z-index:2}
   .sc-ev-play .pl{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px}
-  .sc-ev-empty{width:100%;padding-bottom:56.25%;position:relative;border-radius:12px;overflow:hidden;background:#f4f6f9;margin-bottom:14px;border:1px dashed #e2e6ec}
-  .sc-ev-empty>span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#b8bfc9;font-size:12px}
+  /* 이미지 슬롯 (영상 반절 ~ 2:1 가로형) */
+  .sc-img{position:relative;width:100%;padding-bottom:30%;border-radius:12px;overflow:hidden;background:#f4f6f9;margin-bottom:10px;line-height:0;cursor:pointer}
+  .sc-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  /* 글자 슬롯 (자유형: 제목·내용·기간) */
+  .sc-txt{background:#f9fafb;border:0.5px solid #eef0f3;border-radius:12px;padding:11px 13px;margin-bottom:12px}
+  .sc-txt .tt{font-size:13.5px;font-weight:800;color:var(--ink);line-height:1.4}
+  .sc-txt .tb{font-size:12px;color:var(--sub);line-height:1.55;margin-top:4px;white-space:pre-line}
+  .sc-txt .tp{display:inline-block;font-size:10.5px;font-weight:800;color:#fff;background:var(--primary);border-radius:6px;padding:2px 8px;margin-top:7px}
+  .sc-txt .tp.soon{background:#e5484d}
+  .sc-txt-empty{border:1px dashed #e2e6ec;background:#fbfcfd;color:#b8bfc9;font-size:12px;text-align:center;line-height:1.6;padding:14px 12px}
+  .sc-noev{width:100%;padding-bottom:40%;position:relative;border-radius:12px;overflow:hidden;background:#f4f6f9;margin-bottom:12px;border:1px dashed #e2e6ec}
+  .sc-noev>span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#b8bfc9;font-size:12px}
+  .sc-spacer{flex:1}   /* 남는 공간 아래로 밀어 바닥선 정렬 */
   .sc-strow{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
   .sc-strow .l{font-size:13px;font-weight:700;color:var(--sub)}
   .sc-strow .r{font-size:12.5px;font-weight:800;color:var(--primary)}
@@ -1020,13 +1032,13 @@
       <!-- 폐점 안내 배너 (점주가 탈퇴 시 등록) -->
       <div id="closingNoticeBanner" style="display:none"></div>
 
-      <!-- ★ 매장별 통합 카드 슬라이더 (본사이벤트 + 스탬프 + 쿠폰) -->
-      <div id="home-store-cards" class="home-sec"></div>
-
-      <!-- 창업 브랜드 광고 (brand_ads, 광고주 월정액) -->
+      <!-- ① 창업 브랜드 광고 (brand_ads, 광고주 월정액) — 최상단 -->
       <div id="home-ad-brand" class="home-sec"></div>
 
-      <!-- 날씨 4일 + 생활 특수일 -->
+      <!-- ② ★ 매장별 통합 카드 슬라이더 (본사이벤트 + 스탬프 + 쿠폰) -->
+      <div id="home-store-cards" class="home-sec"></div>
+
+      <!-- ③ 날씨 4일 + 생활 특수일 -->
       <div id="home-weather" class="home-sec"></div>
 
       <!-- (구) 미사용 컨테이너 — 숨김 (잔존 참조 안전용) -->
@@ -2548,13 +2560,80 @@ var _scCpnByStore=null;     // {store_code: 유효쿠폰수}
 var _scStoreBrand={};       // {store_code: brand}
 var _scLoadedOnce=false;
 
+// 매장 0개일 때 보여주는 예시 카드 5개 (영상/이미지/글자 조합 다양하게)
+function _scDemoCards(){
+  var goal=12;
+  var demos=[
+    { nm:"굽네치킨 서강점", color:"#465fff", show:12, ready:true, cpn:2,
+      video:true, img:true, title:"여름 신메뉴 2+1 이벤트", body:"매장 방문 시 음료 무료 증정", period:"D-5" },
+    { nm:"교촌치킨 홍대점", color:"#e5484d", show:8, ready:false, cpn:1,
+      video:true, img:false, title:"신메뉴 출시 기념 할인", body:"", period:"D-2" },
+    { nm:"메가커피 신촌점", color:"#f97316", show:5, ready:false, cpn:0,
+      video:false, img:true, title:"", body:"", period:"" },
+    { nm:"빽다방 합정점", color:"#12b886", show:3, ready:false, cpn:0,
+      video:false, img:false, title:"리뷰 이벤트 진행 중", body:"영수증 리뷰 남기면 쿠폰 지급", period:"D-10" },
+    { nm:"김밥천국 대흥점", color:"#8b5cf6", show:10, ready:false, cpn:0,
+      video:false, img:false, title:"", body:"", period:"" }
+  ];
+  return demos.map(function(d){
+    var initial=(d.nm||"매").trim().charAt(0);
+    var pct=Math.round(d.show/goal*100);
+    var evHtml="";
+    var hasEv=d.video||d.img||d.title||d.body||d.period;
+    if(hasEv){
+      evHtml+="<div class='sc-evtag'>본사 소식 · 광고</div>";
+      if(d.video){
+        evHtml+="<div class='sc-ev' style='background:linear-gradient(135deg,#232b3a,#0f1420)'>"
+          + "<div class='sc-ev-play' style='flex-direction:column'><div class='pl'>▶</div>"
+          + "<div style='font-size:11.5px;margin-top:6px;opacity:.85'>신메뉴 영상</div></div></div>";
+      }
+      if(d.img){
+        evHtml+="<div class='sc-img' style='background:linear-gradient(135deg,#ffd59e,#ff9a76)'>"
+          + "<div style='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#8a4b1e;font-size:12px;font-weight:800'>가로형 홍보 이미지</div></div>";
+      }
+      if(d.title||d.body||d.period){
+        evHtml+="<div class='sc-txt'>"
+          + (d.title?"<div class='tt'>"+esc(d.title)+"</div>":"")
+          + (d.body?"<div class='tb'>"+esc(d.body)+"</div>":"")
+          + (d.period?"<span class='tp"+(/D-[0-3]$/.test(d.period)?" soon":"")+"'>"+esc(d.period)+"</span>":"")
+          + "</div>";
+      }
+    } else {
+      evHtml="<div class='sc-evtag'>본사 소식</div><div class='sc-noev'><span>아직 소식이 없어요</span></div>";
+    }
+    var stHtml="<div class='sc-strow'><div class='l'>스탬프</div>"
+      + "<div class='r'>"+d.show+" <span class='g'>/ "+goal+"</span></div></div>"
+      + "<div class='sc-bar'><i style='width:"+pct+"%'></i></div>";
+    var cpnHtml="<div class='sc-cpn'>"
+      + "<div class='ic' style='background:"+(d.cpn>0?"var(--primary-soft)":"#f1f3f6")+"'>🎟️</div>"
+      + "<div class='tx'><div class='t1' style='"+(d.cpn>0?"":"color:var(--text3)")+"'>"+(d.cpn>0?"쿠폰 "+d.cpn+"장":"쿠폰 없음")+"</div>"
+      +   "<div class='t2'>"+(d.cpn>0?"사용 가능":"스탬프를 모아보세요")+"</div></div>"
+      + (d.cpn>0?"<span style='color:#ccc'>›</span>":"")
+      + "</div>";
+    return "<div class='sc-card"+(d.ready?" sc-ready":"")+"'>"
+      + "<div class='sc-head'><div class='sc-logo' style='background:"+d.color+"'>"+esc(initial)+"</div>"
+      +   "<div class='sc-nm'>"+esc(d.nm)+"</div>"
+      +   (d.ready?"<span style='font-size:10px;font-weight:800;color:#fff;background:var(--primary);border-radius:20px;padding:2px 8px'>교환가능</span>":"")
+      + "</div>"
+      + "<div class='sc-body'>"+evHtml+"<div class='sc-spacer'></div>"+stHtml+cpnHtml+"</div>"
+      + "</div>";
+  }).join("");
+}
+
 async function renderStoreCards(){
   var box=document.getElementById('home-store-cards');
   if(!box) return;
   var goal=(typeof GOAL!=='undefined'&&GOAL>0)?GOAL:12;
 
   if(!_storeData || !_storeData.length){
-    box.innerHTML="<div class='card'><div class='sc-empty'>아직 적립한 매장이 없어요.<br>매장 QR을 찍어 스탬프를 시작하세요!</div></div>";
+    box.innerHTML =
+      "<div class='home-sec-head'><div class='t'>내 단골 매장</div>"
+      + "<div class='more' style='cursor:default'>‹ 예시 · 밀어보기 ›</div></div>"
+      + "<div class='sc-track' id='sc-track'><div class='sc-edge'></div>"
+      + _scDemoCards()
+      + "<div class='sc-edge'></div></div>"
+      + "<div class='card' style='margin-top:12px'><div class='sc-empty'>👆 예시 화면이에요.<br>매장 QR을 찍으면 내 매장 카드로 채워져요!</div></div>";
+    _scBindDots(5);
     return;
   }
 
@@ -2634,34 +2713,47 @@ function _scCardHtml(it,goal,idx){
   var logoBg=_scColorFor(s.code);
   var initial=(s.name||"매").trim().charAt(0);
 
-  // 이벤트 영역 (16:9 고정) — 유튜브 썸네일 or 이미지 or 빈자리
-  var evHtml;
+  // ── 본사 이벤트: 영상 슬롯 + 이미지 슬롯 + 글자 슬롯 (각각 없으면 접힘) ──
+  var evHtml="";
   if(ev){
+    evHtml += "<div class='sc-evtag'>본사 소식 · 광고</div>";
+    var any=false;
+    // ① 영상 슬롯 (16:9) — 있을 때만
     var ytId = ev.youtube_url ? (typeof _ytId==='function'?_ytId(ev.youtube_url):"") : "";
     if(ytId){
-      evHtml = "<div class='sc-evtag'>본사 소식 · 광고</div>"
-        + "<div class='sc-ev' data-yt='"+esc(ytId)+"' onclick=\"scPlayYt(this)\">"
+      any=true;
+      evHtml += "<div class='sc-ev' data-yt='"+esc(ytId)+"' onclick=\"scPlayYt(this)\">"
         +   "<img src='https://i.ytimg.com/vi/"+esc(ytId)+"/hqdefault.jpg' alt=''>"
         +   "<div class='sc-ev-play'><div class='pl'>▶</div></div>"
         + "</div>";
-    } else if(ev.image_url && ev.image_url.length>5){
-      evHtml = "<div class='sc-evtag'>본사 소식 · 광고</div>"
-        + "<div class='sc-ev' onclick=\"scClickEv('"+esc(ev.id)+"','"+esc(ev.link_url||"")+"')\">"
-        +   "<img src='"+esc(ev.image_url)+"' alt=''>"
+    }
+    // ② 이미지 슬롯 (가로형, 영상 반절) — 있을 때만 (왜곡 없이 cover)
+    var img = ev.image_url || ev.ad_image_url || "";
+    if(img && img.length>5){
+      any=true;
+      evHtml += "<div class='sc-img' onclick=\"scClickEv('"+esc(ev.id)+"','"+esc(ev.link_url||"")+"')\">"
+        +   "<img src='"+esc(img)+"' alt=''>"
         + "</div>";
-    } else {
-      // 텍스트형 이벤트도 16:9 틀 안에 넣어 높이 통일
-      evHtml = "<div class='sc-evtag'>본사 소식 · 광고</div>"
-        + "<div class='sc-ev' style='background:linear-gradient(135deg,var(--primary),#1b64da)' onclick=\"scClickEv('"+esc(ev.id)+"','"+esc(ev.link_url||"")+"')\">"
-        +   "<div class='sc-ev-play' style='flex-direction:column;padding:0 16px;text-align:center'>"
-        +     "<div style='font-size:14px;font-weight:800'>"+esc(ev.title||"본사 소식")+"</div>"
-        +     (ev.sub?"<div style='font-size:11.5px;opacity:.9;margin-top:3px'>"+esc(ev.sub)+"</div>":"")
-        +   "</div>"
+    }
+    // ③ 글자 슬롯 (자유형: 제목·내용·기간) — 있을 때만
+    var title = ev.title || ev.event_title || "";
+    var body  = ev.sub || ev.body || ev.event_body || "";
+    var period = _scPeriod(ev);
+    if(title || body || period){
+      any=true;
+      evHtml += "<div class='sc-txt'>"
+        + (title?"<div class='tt'>"+esc(title)+"</div>":"")
+        + (body?"<div class='tb'>"+esc(body)+"</div>":"")
+        + (period?"<span class='tp"+(period.soon?" soon":"")+"'>"+esc(period.label)+"</span>":"")
         + "</div>";
+    }
+    // 이벤트 레코드는 있지만 영상·이미지·글자 아무것도 없을 때
+    if(!any){
+      evHtml += "<div class='sc-noev'><span>아직 소식이 없어요</span></div>";
     }
   } else {
     evHtml = "<div class='sc-evtag'>본사 소식</div>"
-      + "<div class='sc-ev-empty'><span>아직 소식이 없어요</span></div>";
+      + "<div class='sc-noev'><span>아직 소식이 없어요</span></div>";
   }
 
   // 스탬프
@@ -2681,13 +2773,29 @@ function _scCardHtml(it,goal,idx){
     + (cpn>0?"<span style='color:#ccc'>›</span>":"")
     + "</div>";
 
+  // 스페이서로 스탬프·쿠폰을 카드 하단에 고정 (바닥선 정렬)
   return "<div class='sc-card"+(it.ready?" sc-ready":"")+"'>"
     + "<div class='sc-head'><div class='sc-logo' style='background:"+logoBg+"'>"+esc(initial)+"</div>"
     +   "<div class='sc-nm'>"+esc(s.name)+"</div>"
     +   (it.ready?"<span style='font-size:10px;font-weight:800;color:#fff;background:var(--primary);border-radius:20px;padding:2px 8px'>교환가능</span>":"")
     + "</div>"
-    + "<div class='sc-body'>"+evHtml+stHtml+cpnHtml+"</div>"
+    + "<div class='sc-body'>"+evHtml+"<div class='sc-spacer'></div>"+stHtml+cpnHtml+"</div>"
     + "</div>";
+}
+
+// 이벤트 기간 → D-day 라벨 (다양한 컬럼명 유연 지원)
+function _scPeriod(ev){
+  try{
+    var end = ev.event_end || ev.end_date || ev.period_end || ev.paid_until || "";
+    if(!end) return null;
+    var endD=new Date(String(end).length<=10 ? (end+"T23:59:59+09:00") : end);
+    if(isNaN(endD)) return null;
+    var now=new Date();
+    var diff=Math.ceil((endD-now)/(1000*60*60*24));
+    if(diff<0) return null;                       // 지난 이벤트는 표시 안 함
+    if(diff===0) return { label:"오늘 마감", soon:true };
+    return { label:"D-"+diff, soon:diff<=3 };
+  }catch(e){ return null; }
 }
 
 // 매장 코드로 로고 색 고정 (브랜드 느낌)
