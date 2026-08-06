@@ -615,7 +615,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.6 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.7 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1155,6 +1155,12 @@
     <div class="cust-page" id="cpage-benefit">
       <div id="custBenefitHost"><div class="empty" style="padding:50px 0;text-align:center;color:#8a909a">착한창업을 불러오는 중…</div></div>
     </div>
+    <style>
+      /* 착한창업 탭: iframe을 헤더 아래 ~ 탭바 위 전체에 꽉 채움 (노트앱과 동일 크기·자체 스크롤) */
+      #cpage-benefit.on{position:fixed;left:50%;transform:translateX(-50%);top:0;bottom:0;width:100%;max-width:460px;z-index:5;background:#fff}
+      #cpage-benefit #custBenefitHost{height:100%}
+      #cpage-benefit #custBenefitHost iframe{width:100%;height:100%;border:0;display:block}
+    </style>
 
     <!-- ===== 내정보 탭 ===== -->
     <div class="cust-page" id="cpage-me">
@@ -1171,9 +1177,17 @@
         </div>
       </div>
 
-      <!-- 가입매장 현황 -->
-      <div class="me-sec">내 단골 매장</div>
-      <div class="me-card" id="me-stores"><div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">불러오는 중…</div></div>
+      <!-- 가입매장 현황 (매장 있을 때만 표시) -->
+      <div id="me-stores-sec" style="display:none">
+        <div class="me-sec">내 단골 매장</div>
+        <div class="me-card" id="me-stores"></div>
+      </div>
+
+      <!-- 찜한 브랜드 (있을 때만 표시) -->
+      <div id="me-fav-sec" style="display:none">
+        <div class="me-sec">찜한 브랜드</div>
+        <div class="me-card" id="me-fav"></div>
+      </div>
 
       <!-- 정보 수정 (접이식) -->
       <div class="me-card" style="margin-top:6px">
@@ -1384,7 +1398,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.6";
+const CUST_APP_VERSION = "5.9.7";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -1705,7 +1719,7 @@ function openBenefitDetail(startupId){
   var host=document.getElementById("custBenefitHost");
   if(host){
     _custBenefitLoaded=true;
-    host.innerHTML='<iframe src="'+BN_APP_URL+'/index.html?only=benefit&open='+encodeURIComponent(startupId)+'&uid='+encodeURIComponent(uid)+'" style="width:100%;border:none;height:calc(100vh - 150px);border-radius:12px" title="착한창업"></iframe>';
+    host.innerHTML='<iframe src="'+BN_APP_URL+'/index.html?only=benefit&open='+encodeURIComponent(startupId)+'&uid='+encodeURIComponent(uid)+'" title="착한창업"></iframe>';
   }
 }
 
@@ -2714,6 +2728,17 @@ window.addEventListener("DOMContentLoaded",function(){
     // 상단·하단이 동시에 떠서 헷갈리는 문제 방지 — 한 번에 하나만 보여준다.
   },1400);
 });
+// 착한창업 iframe(브랜드노트)에서 찜 신호 수신 → 멤버스에도 저장
+window.addEventListener("message", function(ev){
+  try{
+    var d=ev.data;
+    if(d && d.type==="bnFav" && Array.isArray(d.ids)){
+      localStorage.setItem("bn_bs_fav", JSON.stringify(d.ids));
+      // 내정보 화면이 열려있으면 찜 목록 갱신
+      try{ if(typeof _renderMeFav==="function") _renderMeFav(); }catch(e){}
+    }
+  }catch(e){}
+});
 function doLogout(){ if(PEEK_MODE){ toast("미리보기 화면입니다"); return; } if(DEMO_MODE){ toast("데모 화면입니다"); return; } try{ localStorage.removeItem("cust_hash"); }catch(e){} location.reload(); }
 
 // ── 회원탈퇴 (모든 스탬프·쿠폰·선물·회원정보 삭제) ──
@@ -2762,7 +2787,7 @@ function custTab(t){
     var host=document.getElementById('custBenefitHost');
     if(host){
       var uid = (typeof CUST!=='undefined' && CUST && CUST.phone_hash) ? CUST.phone_hash : '';
-      host.innerHTML = '<iframe src="'+BN_APP_URL+'/index.html?only=benefit&uid='+encodeURIComponent(uid)+'" style="width:100%;border:none;height:calc(100vh - 150px);border-radius:12px" title="착한창업"></iframe>';
+      host.innerHTML = '<iframe src="'+BN_APP_URL+'/index.html?only=benefit&uid='+encodeURIComponent(uid)+'" title="착한창업"></iframe>';
     }
   }
 }
@@ -2771,11 +2796,21 @@ var _custMeLoaded=false;
 function renderCustMe(){
   // 프로필
   try{
-    var nm=(CUST&&CUST.name)?CUST.name:"고객님";
-    var ph=(CUST&&CUST.phone)?CUST.phone:"";
-    var av=$("me-av"); if(av) av.textContent=nm.trim().charAt(0)||"고";
+    var rawPh=(CUST&&CUST.phone)?String(CUST.phone).replace(/[^0-9]/g,""):"";
+    var maskPh="";
+    if(rawPh.length>=4){
+      var last4=rawPh.slice(-4);
+      maskPh="***-****-"+last4;
+    }
+    var nm=(CUST&&CUST.name)?CUST.name : (maskPh||"고객님");
+    var av=$("me-av"); if(av) av.textContent=(nm==="고객님"||nm.indexOf("*")>=0)?"고":nm.trim().charAt(0);
     var mn=$("me-name"); if(mn) mn.textContent=nm;
-    var mp=$("me-phone"); if(mp) mp.textContent=ph||"—";
+    // 전화번호 줄: 이름이 있으면 마스킹 전화, 이름이 없으면(이미 위에 전화표시) 비움
+    var mp=$("me-phone");
+    if(mp){
+      if(CUST&&CUST.name){ mp.textContent=maskPh||""; mp.style.display=maskPh?"block":"none"; }
+      else { mp.style.display="none"; }
+    }
     var vp=$("me-version"); if(vp) vp.textContent="v"+CUST_APP_VERSION;
   }catch(e){}
   // 정보수정 값 채우기 (기존 openMyPage가 하던 것)
@@ -2788,8 +2823,46 @@ function renderCustMe(){
   try{ _loadMeBanner(); }catch(e){}
   // 가입매장 현황
   try{ _renderMeStores(); }catch(e){}
+  // 찜한 브랜드
+  try{ _renderMeFav(); }catch(e){}
   // 알림 상태 표시
   try{ _meNotiState(); }catch(e){}
+}
+// 찜한 브랜드 목록 (localStorage bn_bs_fav → brand_startup 조회)
+async function _renderMeFav(){
+  var host=$("me-fav"); var sec=$("me-fav-sec");
+  if(!host||!sec) return;
+  var ids=[];
+  try{ ids=JSON.parse(localStorage.getItem("bn_bs_fav")||"[]"); }catch(e){ ids=[]; }
+  if(!ids.length){ sec.style.display="none"; return; }
+  try{
+    var {data}=await sbRead.from("brand_startup").select("id,brand_name,biz_type,benefit_summary,thumb_url,image_url").in("id",ids);
+    var list=(data||[]);
+    if(!list.length){ sec.style.display="none"; return; }
+    sec.style.display="block";
+    host.innerHTML=list.map(function(b){
+      var img=(b.thumb_url||b.image_url||"");
+      var thumb=(img&&img.length>5)
+        ? "<div style='width:44px;height:44px;flex-shrink:0;border-radius:10px;overflow:hidden;background:#eef0f3'><img src='"+esc(img)+"' style='width:100%;height:100%;object-fit:cover'></div>"
+        : "<div style='width:44px;height:44px;flex-shrink:0;border-radius:10px;background:linear-gradient(135deg,#e8ecf2,#d5dbe4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800'>"+esc((b.brand_name||"브").charAt(0))+"</div>";
+      return "<div class='me-store' onclick=\"openBenefitDetail('"+esc(b.id)+"')\" style='cursor:pointer'>"
+        + thumb
+        + "<div class='me-smid'><div class='me-snm'>"+esc(b.brand_name||"브랜드")+"</div>"
+        +   "<div class='me-sinfo'>"+esc(b.biz_type||"")+(b.benefit_summary?" · "+esc(b.benefit_summary):"")+"</div></div>"
+        + "<button class='me-sleave' onclick=\"event.stopPropagation();unfavBrand('"+esc(b.id)+"')\">찜해제</button>"
+        + "</div>";
+    }).join("");
+  }catch(e){ sec.style.display="none"; }
+}
+// 찜 해제 (멤버스 localStorage에서 제거)
+function unfavBrand(id){
+  try{
+    var ids=JSON.parse(localStorage.getItem("bn_bs_fav")||"[]");
+    ids=ids.filter(function(x){ return String(x)!==String(id); });
+    localStorage.setItem("bn_bs_fav", JSON.stringify(ids));
+    toast("찜을 해제했어요");
+    _renderMeFav();
+  }catch(e){}
 }
 // 알림 상태 표시
 function _meNotiState(){
@@ -2825,11 +2898,13 @@ async function _loadMeBanner(){
 // 가입매장 현황 목록 (단골매장 + 개별 탈퇴)
 function _renderMeStores(){
   var host=$("me-stores"); if(!host) return;
+  var sec=$("me-stores-sec");
   var list=(_storeData||[]);
   if(!list.length){
-    host.innerHTML="<div style='padding:22px;text-align:center;color:var(--text3);font-size:13px'>아직 단골 매장이 없어요.<br>매장 QR을 찍으면 여기에 표시돼요.</div>";
+    if(sec) sec.style.display="none";   // 매장 없으면 섹션 통째로 숨김
     return;
   }
+  if(sec) sec.style.display="block";
   var goal=(typeof GOAL!=='undefined'&&GOAL>0)?GOAL:12;
   host.innerHTML=list.map(function(s){
     var initial=(s.name||"매").trim().charAt(0);
