@@ -51,12 +51,33 @@
   .home-adtag .ad{font-size:9.5px;color:#aab3bd;background:#f1f3f6;padding:1px 6px;border-radius:5px;font-weight:600}
 
   /* ===== 스탬프 가로 스크롤 카드 ===== */
-  .stamp-hscroll{display:flex;gap:11px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x;
+  .stamp-hscroll{display:flex;gap:11px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
     overscroll-behavior-x:contain;padding:2px 2px 4px;scroll-snap-type:x proximity}
   .stamp-hscroll::-webkit-scrollbar{display:none}
 
   /* ===== 매장별 통합 카드 슬라이더 (본사이벤트+스탬프+쿠폰) ===== */
-  .sc-track{display:flex;gap:11px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x;
+  /* ===== 매장 카드: 세로 스택 아코디언 (지갑 형태) ===== */
+  .sc-stack{display:flex;flex-direction:column;gap:10px}
+  .sc-card2{background:var(--card);border:0.5px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);position:relative;transition:box-shadow .2s}
+  .sc-card2.sc-new{box-shadow:0 0 0 2px rgba(59,76,202,.35),var(--shadow);animation:scGlow 1.8s ease-in-out infinite}
+  @keyframes scGlow{0%,100%{box-shadow:0 0 0 2px rgba(59,76,202,.22),var(--shadow)}50%{box-shadow:0 0 0 3px rgba(59,76,202,.5),0 6px 18px rgba(59,76,202,.28)}}
+  /* 접힌 헤더 (항상 보임) */
+  .sc-chead{display:flex;align-items:center;gap:11px;padding:14px 15px;cursor:pointer}
+  .sc-clogo{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden}
+  .sc-clogo img{width:100%;height:100%;object-fit:cover}
+  .sc-cmid{flex:1;min-width:0}
+  .sc-cnm{font-size:14.5px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+  .sc-cnew{font-size:9.5px;font-weight:800;color:#fff;background:#e5484d;border-radius:5px;padding:1px 6px;flex-shrink:0;letter-spacing:.02em}
+  .sc-cinfo{font-size:12px;color:var(--sub);margin-top:3px;display:flex;align-items:center;gap:8px}
+  .sc-cinfo .cready{color:var(--primary);font-weight:800}
+  .sc-cthumb{width:46px;height:46px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#f4f6f9}
+  .sc-carr{color:#c1c8d1;font-size:13px;flex-shrink:0;transition:transform .25s}
+  .sc-card2.open .sc-carr{transform:rotate(90deg)}
+  /* 펼친 본문 (열릴 때만) */
+  .sc-cbody{display:none;padding:0 15px 15px;border-top:0.5px solid #f1f3f6;margin-top:2px;padding-top:13px}
+  .sc-card2.open .sc-cbody{display:block}
+  /* (구) 가로 슬라이드 잔존 스타일 유지 (혹시 참조) */
+  .sc-track{display:flex;gap:11px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
     overscroll-behavior-x:contain;scroll-snap-type:x mandatory;padding:2px 0 4px;margin:0 -16px;
     scroll-padding-left:16px}
   .sc-track::-webkit-scrollbar{display:none}
@@ -120,7 +141,7 @@
   .st-mini .rdy-badge{position:absolute;top:11px;right:11px;font-size:10px;font-weight:800;color:#fff;background:var(--primary);border-radius:20px;padding:2px 7px}
 
   /* ===== 날씨 + 특수일 스트립 (노트앱 이식) ===== */
-  .top-strip{display:flex;align-items:stretch;gap:8px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;max-width:100%;padding-bottom:2px}
+  .top-strip{display:flex;align-items:stretch;gap:8px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;max-width:100%;padding-bottom:2px}
   .top-strip::-webkit-scrollbar{display:none}
   .ts-issue-wrap{flex:0 0 auto;min-width:158px;height:62px;overflow:hidden;border-radius:14px;position:relative;cursor:pointer}
   .ts-issue-wrap:active{transform:scale(.97);transition:transform .1s}
@@ -315,7 +336,7 @@
   .store-name .pin{width:15px;height:15px;color:var(--primary);}
   .store-badge{font-size:11px;font-weight:700;color:var(--primary);background:var(--primary-soft);padding:3px 9px;border-radius:20px;}
   /* 매장 선택 칩 (가로 스크롤) */
-  .store-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-x;}
+  .store-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .store-chips::-webkit-scrollbar{display:none;}
   .store-chip{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:22px;
     background:#f2f4f7;border:1.5px solid transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;}
@@ -570,7 +591,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.8.0 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.0 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1256,7 +1277,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.8.0";
+const CUST_APP_VERSION = "5.9.0";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
@@ -2718,14 +2739,31 @@ function _scDemoCards(){
       +   "<div class='t2'>"+(d.cpn>0?"사용 가능":"스탬프를 모아보세요")+"</div></div>"
       + (d.cpn>0?"<span style='color:#ccc'>›</span>":"")
       + "</div>";
-    return "<div class='sc-card"+(d.ready?" sc-ready":"")+"'>"
-      + "<div class='sc-head'><div class='sc-logo' style='background:"+d.color+"'>"+esc(initial)+"</div>"
-      +   "<div class='sc-nm'>"+esc(d.nm)+"</div>"
-      +   (d.ready?"<span style='font-size:10px;font-weight:800;color:#fff;background:var(--primary);border-radius:20px;padding:2px 8px'>교환가능</span>":"")
+    var infoBits=["스탬프 "+d.show+"/"+goal];
+    if(d.cpn>0) infoBits.push("쿠폰 "+d.cpn+"장");
+    var demoNew=(d.video||d.img||d.title||d.cpn>0||d.ready);
+    return "<div class='sc-card2"+(demoNew?" sc-new":"")+"'>"
+      + "<div class='sc-chead' onclick=\"scToggleDemo(this)\">"
+      +   "<div class='sc-clogo' style='background:"+d.color+"'>"+esc(initial)+"</div>"
+      +   "<div class='sc-cmid'>"
+      +     "<div class='sc-cnm'>"+esc(d.nm)
+      +       (demoNew?"<span class='sc-cnew'>NEW</span>":"")
+      +       (d.ready?"<span style='font-size:9.5px;font-weight:800;color:#fff;background:var(--primary);border-radius:5px;padding:1px 6px'>교환가능</span>":"")
+      +     "</div>"
+      +     "<div class='sc-cinfo'>"+infoBits.join(" · ")+"</div>"
+      +   "</div>"
+      +   "<span class='sc-carr'>›</span>"
       + "</div>"
-      + "<div class='sc-body'>"+evHtml+"<div class='sc-spacer'></div>"+stHtml+cpnHtml+"</div>"
+      + "<div class='sc-cbody'>"+evHtml+stHtml+cpnHtml+"</div>"
       + "</div>";
   }).join("");
+}
+// 데모 카드 토글 (하나만 펼침)
+function scToggleDemo(headEl){
+  var el=headEl.closest(".sc-card2"); if(!el) return;
+  var wasOpen=el.classList.contains("open");
+  document.querySelectorAll(".sc-card2.open").forEach(function(c){ c.classList.remove("open"); });
+  if(!wasOpen){ el.classList.add("open"); }
 }
 
 async function renderStoreCards(){
@@ -2736,12 +2774,11 @@ async function renderStoreCards(){
   if(!_storeData || !_storeData.length){
     box.innerHTML =
       "<div class='home-sec-head'><div class='t'>내 단골 매장</div>"
-      + "<div class='more' style='cursor:default'>‹ 예시 · 밀어보기 ›</div></div>"
-      + "<div class='sc-track' id='sc-track'><div class='sc-edge'></div>"
+      + "<div class='more' style='cursor:default'>예시 · 탭하면 펼쳐져요</div></div>"
+      + "<div class='sc-stack'>"
       + _scDemoCards()
-      + "<div class='sc-edge'></div></div>"
+      + "</div>"
       + "<div class='card' style='margin-top:12px'><div class='sc-empty'>👆 예시 화면이에요.<br>매장 QR을 찍으면 내 매장 카드로 채워져요!</div></div>";
-    _scBindDots(5);
     return;
   }
 
@@ -2774,18 +2811,23 @@ async function renderStoreCards(){
   });
 
   var cards=items.map(function(it,idx){ return _scCardHtml(it,goal,idx); }).join("");
-  var dots = items.length>1
-    ? "<div class='sc-dots' id='sc-dots'>"+items.map(function(_,i){ return "<span class='"+(i===0?"on":"")+"'></span>"; }).join("")+"</div>"
-    : "";
   box.innerHTML =
     "<div class='home-sec-head'><div class='t'>내 단골 매장</div>"
-    + (items.length>1?"<div class='more' style='cursor:default'>‹ 옆으로 밀기 ›</div>":"")
+    + (items.length>1?"<div class='more' style='cursor:default'>탭하면 펼쳐져요</div>":"")
     + "</div>"
-    + "<div class='sc-track' id='sc-track'><div class='sc-edge'></div>"+cards+"<div class='sc-edge'></div></div>"
-    + dots;
-
-  // 이벤트 유튜브: 각 카드의 썸네일 탭 시 인라인 재생
-  _scBindDots(items.length);
+    + "<div class='sc-stack'>"+cards+"</div>";
+  // 첫 카드는 자동으로 펼쳐서 보여주기
+  try{ if(items.length){ var first=document.getElementById("sccard-"+items[0].s.code); if(first) first.classList.add("open"); } }catch(e){}
+}
+// 매장 카드 아코디언 토글 (한 번에 하나만 펼침)
+function scToggleCard(code){
+  var el=document.getElementById("sccard-"+code);
+  if(!el) return;
+  var wasOpen=el.classList.contains("open");
+  // 다른 카드 전부 접기
+  document.querySelectorAll(".sc-card2.open").forEach(function(c){ c.classList.remove("open"); });
+  // 이 카드 토글 (닫혀있었으면 펼침)
+  if(!wasOpen){ el.classList.add("open"); el.classList.remove("sc-new"); }
 }
 
 // 매장→브랜드 매핑, 브랜드별 본사 이벤트를 준비 (캐시)
@@ -2881,13 +2923,33 @@ function _scCardHtml(it,goal,idx){
     + (cpn>0?"<span style='color:#ccc'>›</span>":"")
     + "</div>";
 
-  // 스페이서로 스탬프·쿠폰을 카드 하단에 고정 (바닥선 정렬)
-  return "<div class='sc-card"+(it.ready?" sc-ready":"")+"'>"
-    + "<div class='sc-head'><div class='sc-logo' style='background:"+logoBg+"'>"+esc(initial)+"</div>"
-    +   "<div class='sc-nm'>"+esc(s.name)+"</div>"
-    +   (it.ready?"<span style='font-size:10px;font-weight:800;color:#fff;background:var(--primary);border-radius:20px;padding:2px 8px'>교환가능</span>":"")
+  // ── 새 소식 감지: 본사 이벤트 있거나 쿠폰 있으면 NEW ──
+  var hasNew = (!!ev) || (it.cpn>0) || it.ready;
+  // 접힌 헤더에 보일 간단정보
+  var infoBits=[];
+  infoBits.push("스탬프 "+it.show+"/"+goal);
+  if(it.cpn>0) infoBits.push("쿠폰 "+it.cpn+"장");
+  var infoLine = infoBits.join(" · ");
+  // 접힌 헤더 썸네일 (이벤트 이미지 우선)
+  var thumbImg = (ev && (ev.image_url||ev.ad_image_url)) ? (ev.image_url||ev.ad_image_url) : "";
+  var thumbHtml = (thumbImg && thumbImg.length>5)
+    ? "<img class='sc-cthumb' src='"+esc(thumbImg)+"' alt=''>"
+    : "";
+
+  return "<div class='sc-card2"+(hasNew?" sc-new":"")+"' id='sccard-"+esc(s.code)+"'>"
+    + "<div class='sc-chead' onclick=\"scToggleCard('"+esc(s.code)+"')\">"
+    +   "<div class='sc-clogo' style='background:"+logoBg+"'>"+esc(initial)+"</div>"
+    +   "<div class='sc-cmid'>"
+    +     "<div class='sc-cnm'>"+esc(s.name)
+    +       (hasNew?"<span class='sc-cnew'>NEW</span>":"")
+    +       (it.ready?"<span style='font-size:9.5px;font-weight:800;color:#fff;background:var(--primary);border-radius:5px;padding:1px 6px'>교환가능</span>":"")
+    +     "</div>"
+    +     "<div class='sc-cinfo'>"+(it.ready?"<span class='cready'>"+infoLine+"</span>":infoLine)+"</div>"
+    +   "</div>"
+    +   thumbHtml
+    +   "<span class='sc-carr'>›</span>"
     + "</div>"
-    + "<div class='sc-body'>"+evHtml+"<div class='sc-spacer'></div>"+stHtml+cpnHtml+"</div>"
+    + "<div class='sc-cbody'>"+evHtml+stHtml+cpnHtml+"</div>"
     + "</div>";
 }
 
