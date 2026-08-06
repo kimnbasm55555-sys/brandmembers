@@ -77,18 +77,6 @@
   .sc-cbody{display:none;padding:0 15px 15px;border-top:0.5px solid #f1f3f6;margin-top:2px;padding-top:13px}
   .sc-card2.open .sc-cbody{display:block}
   /* (구) 가로 슬라이드 잔존 스타일 유지 (혹시 참조) */
-  .sc-track{display:flex;gap:11px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
-    overscroll-behavior-x:contain;scroll-snap-type:x mandatory;padding:2px 0 4px;margin:0 -16px;
-    scroll-padding-left:16px}
-  .sc-track::-webkit-scrollbar{display:none}
-  .sc-track>.sc-edge{flex:0 0 5px}   /* 좌우 여백 확보용 */
-  .sc-card{flex:0 0 88%;scroll-snap-align:center;background:var(--card);border:0.5px solid var(--line);
-    border-radius:16px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
-  .sc-head{padding:13px 15px 10px;display:flex;align-items:center;gap:8px;border-bottom:0.5px solid #f1f3f6;flex-shrink:0}
-  .sc-logo{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;
-    font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
-  .sc-nm{font-size:14px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
-  .sc-body{padding:12px 15px;display:flex;flex-direction:column;flex:1;min-height:560px}   /* ★ 카드 높이 고정 */
   .sc-evtag{font-size:11px;font-weight:700;color:#aab3bd;margin-bottom:6px}
   /* 영상 슬롯 (16:9) */
   .sc-ev{position:relative;width:100%;padding-bottom:56.25%;border-radius:12px;overflow:hidden;background:#111;margin-bottom:10px;cursor:pointer;line-height:0}
@@ -110,7 +98,6 @@
   .sc-txt-empty{border:1px dashed #e2e6ec;background:#fbfcfd;color:#b8bfc9;font-size:12px;text-align:center;line-height:1.6;padding:14px 12px}
   .sc-noev{width:100%;padding-bottom:40%;position:relative;border-radius:12px;overflow:hidden;background:#f4f6f9;margin-bottom:12px;border:1px dashed #e2e6ec}
   .sc-noev>span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#b8bfc9;font-size:12px}
-  .sc-spacer{flex:1}   /* 남는 공간 아래로 밀어 바닥선 정렬 */
   .sc-strow{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
   .sc-strow .l{font-size:13px;font-weight:700;color:var(--sub)}
   .sc-strow .r{font-size:12.5px;font-weight:800;color:var(--primary)}
@@ -122,11 +109,6 @@
   .sc-cpn .tx{flex:1;min-width:0}
   .sc-cpn .tx .t1{font-size:13px;font-weight:800;color:var(--ink)}
   .sc-cpn .tx .t2{font-size:11px;color:var(--text3);margin-top:1px}
-  .sc-ready{border:0.5px solid var(--primary)}
-  .sc-ready .sc-head{background:var(--primary-soft)}
-  .sc-dots{display:flex;gap:5px;justify-content:center;margin-top:10px}
-  .sc-dots span{width:6px;height:6px;border-radius:99px;background:#d1d5db;transition:all .2s}
-  .sc-dots span.on{width:16px;background:var(--primary)}
   .sc-empty{padding:30px 14px;text-align:center;color:var(--text3);line-height:1.7}
   .st-mini{flex:0 0 auto;width:140px;scroll-snap-align:start;background:var(--card);border:1px solid var(--line);
     border-radius:15px;padding:15px 15px 14px;box-shadow:var(--shadow);position:relative}
@@ -615,7 +597,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.10 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.12 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1157,7 +1139,7 @@
     </div>
     <style>
       /* 착한창업 탭: iframe을 헤더 아래 ~ 탭바 위 전체에 꽉 채움 (노트앱과 동일 크기·자체 스크롤) */
-      #cpage-benefit.on{position:fixed;left:50%;transform:translateX(-50%);top:0;bottom:0;width:100%;max-width:460px;z-index:5;background:#fff}
+      #cpage-benefit.on{position:fixed;left:50%;transform:translateX(-50%);top:88px;bottom:64px;width:100%;max-width:460px;z-index:5;background:#fff}
       #cpage-benefit #custBenefitHost{height:100%}
       #cpage-benefit #custBenefitHost iframe{width:100%;height:100%;border:0;display:block}
     </style>
@@ -1392,7 +1374,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.10";
+const CUST_APP_VERSION = "5.9.12";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -3250,23 +3232,6 @@ function scClickEv(id,link){
   if(link) window.open(link,"_blank");
 }
 // 슬라이드 위치 → 하단 점 동기화
-function _scBindDots(n){
-  if(n<=1) return;
-  var track=document.getElementById("sc-track"), dots=document.getElementById("sc-dots");
-  if(!track||!dots) return;
-  var spans=dots.querySelectorAll("span");
-  track.addEventListener("scroll",function(){
-    var cards=track.querySelectorAll(".sc-card");
-    if(!cards.length) return;
-    var mid=track.scrollLeft+track.clientWidth/2;
-    var best=0, bestD=1e9;
-    cards.forEach(function(c,i){
-      var cl=c.offsetLeft+c.offsetWidth/2;
-      var d=Math.abs(cl-mid); if(d<bestD){ bestD=d; best=i; }
-    });
-    spans.forEach(function(sp,i){ sp.classList.toggle("on",i===best); });
-  },{passive:true});
-}
 // 잔존 호출부 호환 (구 함수명 → 신 렌더로 위임)
 function renderHomeStamp(){ try{ renderStoreCards(); }catch(e){} }
 function renderHomeCoupon(){ try{ renderStoreCards(); }catch(e){} }
@@ -3783,7 +3748,8 @@ async function enterMain(){
   $("mainView").classList.remove("hidden");
   $("introView").classList.add("hidden");
   showCustTabbar();
-  _hideBootMask();
+  // bootMask는 홈이 실제로 그려진 뒤에 벗긴다 (옛 화면 깜빡임 방지)
+  setTimeout(function(){ try{ _hideBootMask(); }catch(e){} }, 150);
   // ★ 홈 스크롤 막힘 방지: 화면을 덮을 수 있는 모든 오버레이 강제 제거 + 스크롤 복구
   try{
     ["introView","bootMask","installGate","authView","boxView","gphoneView","pwa-ios-bg"].forEach(function(id){
