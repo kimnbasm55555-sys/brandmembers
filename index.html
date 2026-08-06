@@ -98,6 +98,7 @@
   .sc-txt-empty{border:1px dashed #e2e6ec;background:#fbfcfd;color:#b8bfc9;font-size:12px;text-align:center;line-height:1.6;padding:14px 12px}
   .sc-noev{width:100%;padding-bottom:40%;position:relative;border-radius:12px;overflow:hidden;background:#f4f6f9;margin-bottom:12px;border:1px dashed #e2e6ec}
   .sc-noev>span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#b8bfc9;font-size:12px}
+  .sc-msg{background:linear-gradient(135deg,#f3f6ff,#eef1fb);border:0.5px solid #e6eaf5;border-radius:12px;padding:18px 16px;margin-bottom:12px;text-align:center;font-size:13.5px;font-weight:700;color:#5b6ce0;line-height:1.5}
   .sc-strow{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
   .sc-strow .l{font-size:13px;font-weight:700;color:var(--sub)}
   .sc-strow .r{font-size:12.5px;font-weight:800;color:var(--primary)}
@@ -597,7 +598,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.13 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.17 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1374,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.13";
+const CUST_APP_VERSION = "5.9.17";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -3151,8 +3152,21 @@ function _scCardHtml(it,goal,idx){
     // 프랜차이즈 매장인데 아직 본사 이벤트가 없을 때만 '본사 소식' 안내
     evHtml = "<div class='sc-evtag'>본사 소식</div>"
       + "<div class='sc-noev'><span>아직 소식이 없어요</span></div>";
+  } else {
+    // 개인 매장(brand 없음): 본사 개념이 없으므로 손님에게 따뜻한 멘트만 (여러 개 중 매장별 고정)
+    var _msgs = [
+      "언제나 찾아주셔서 감사해요 🙏",
+      "오늘도 방문해 주셔서 고맙습니다 😊",
+      "단골이 되어주셔서 감사해요 💛",
+      "늘 아껴주셔서 감사합니다 ✨",
+      "찾아주시는 한 분 한 분이 큰 힘이 돼요 🌿",
+      "오늘도 좋은 하루 보내세요 🍀",
+      "정성껏 준비해 기다리고 있을게요 🙂"
+    ];
+    var _mi = 0;
+    try { var _c=(s.code||""); for(var _k=0;_k<_c.length;_k++){ _mi=(_mi+_c.charCodeAt(_k))%_msgs.length; } } catch(e){}
+    evHtml = "<div class='sc-msg'>"+_msgs[_mi]+"</div>";
   }
-  // 개인 매장(brand 없음)은 본사 소식 영역을 아예 표시하지 않음 (B안: 개인=스탬프·쿠폰만)
 
   // 스탬프
   var pct=Math.round(it.show/goal*100);
@@ -3919,7 +3933,7 @@ async function applyEventEntry(){
 function shareEventKakao(){
   var e=_storeEvent; if(!e) return;
   var base=location.origin;
-  var url=base+"/customer.html?store="+encodeURIComponent(STORE_CODE)+"&ad=1";
+  var url=base+"/index.html?store="+encodeURIComponent(STORE_CODE)+"&ad=1";
   var title=(STORE_NAME||"우리 가게")+" · "+e.event_title;
   var desc=(e.event_gift?("🎁 "+e.event_gift+" · "):"")+(e.event_body||"이벤트 확인하기");
   var thumb=e.ad_image_url||(base+"/icon-512.png");
@@ -5811,6 +5825,8 @@ function startStampRealtime(){
       .subscribe(function(status){
         if(status==="SUBSCRIBED"){
           if(_custStampPoll){ clearInterval(_custStampPoll); _custStampPoll=null; }
+          // realtime이 연결되면 즉시 감지가 되므로, 2초 빠른확인은 낭비 → 중단
+          if(_fastApproveTimer){ clearInterval(_fastApproveTimer); _fastApproveTimer=null; }
         }else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
           if(!_custStampPoll){
             _custStampPoll=setInterval(function(){ try{ refreshStamps(); }catch(e){} }, 7000);
@@ -5850,6 +5866,7 @@ async function refreshStamps(){
   var byStore={};   // code -> {balance, pending, earnPending}
   try{
     var {data}=await sb.from("stamps").select("store_code,amount,kind,status").eq("phone_hash",CUST.phone_hash);
+    _lastStampRows = data||[];   // 빠른 승인 확인용
     (data||[]).forEach(function(r){
       var sc=r.store_code||"(기타)";
       if(!byStore[sc]) byStore[sc]={balance:0,pending:false,earnPending:false};
@@ -5982,6 +5999,26 @@ async function doEarn(storeCode){
   if(error){ toast("적립 신청 실패: "+error.message); return; }
   toast("적립 신청 완료 · 매장 승인 대기중");
   await refreshStamps();
+  _fastApproveWatch();   // 신청 직후 빠르게 승인 확인
+}
+// ── 신청 직후 빠른 승인 감지 (realtime 연결 지연 대비, 2초 간격 최대 40초) ──
+var _fastApproveTimer=null, _fastApproveCount=0;
+var _lastStampRows=[];
+function _fastApproveWatch(){
+  if(DEMO_MODE) return;
+  if(_fastApproveTimer){ clearInterval(_fastApproveTimer); _fastApproveTimer=null; }
+  _fastApproveCount=0;
+  _fastApproveTimer=setInterval(async function(){
+    _fastApproveCount++;
+    try{ await refreshStamps(); }catch(e){}
+    try{ await refreshCoupons(); }catch(e){}
+    // 대기중인 신청이 없으면(=다 승인/거절 처리됨) 멈춤
+    var stillPending=false;
+    try{ stillPending = !!(_lastStampRows && _lastStampRows.some(function(r){ return r.status==="pending"; })); }catch(e){}
+    if(!stillPending || _fastApproveCount>=20){   // 20회(약 40초) 지나면 realtime에 맡기고 종료
+      clearInterval(_fastApproveTimer); _fastApproveTimer=null;
+    }
+  }, 2000);
 }
 async function doRedeem(storeCode){
   if(PEEK_MODE){ toast("미리보기 화면이에요"); return; }
@@ -5992,6 +6029,7 @@ async function doRedeem(storeCode){
   if(error){ toast("신청 실패: "+error.message); return; }
   toast("무료 교환 신청 완료");
   await refreshStamps();
+  _fastApproveWatch();   // 신청 직후 빠르게 승인 확인
 }
 async function refreshCoupons(){
   var box=$("couponList");
