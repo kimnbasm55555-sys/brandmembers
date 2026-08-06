@@ -562,7 +562,6 @@
     <button onclick="custInappOpen()" style="width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,#3b4cca,#5b6ce0);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(59,76,202,.35)">
       <span id="ig-inapp-label">브라우저로 열기</span>
     </button>
-    <div style="font-size:12px;color:#8a909a;margin-top:10px;line-height:1.5">지금은 카톡 등 앱 안이라 설치가 안 돼요.<br>위 버튼으로 열면 설치할 수 있어요.</div>
   </div>
 
   <!-- 감지 오류 탈출구 (작게) -->
@@ -570,7 +569,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v4.0.0 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.0.0 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -638,17 +637,32 @@
 
   <div id="loginPwWrap" class="field hidden">
     <label>비밀번호</label>
-    <input type="password" id="inLoginPw" placeholder="비밀번호 입력" autocomplete="current-password">
+    <div style="position:relative">
+      <input type="password" id="inLoginPw" placeholder="비밀번호 입력" autocomplete="current-password" style="padding-right:44px">
+      <button type="button" onclick="togglePw('inLoginPw',this)" aria-label="비밀번호 보기" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#98a2b3;padding:6px;display:flex;align-items:center">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
   </div>
 
   <div id="signupExtra" class="hidden">
     <div class="field">
       <label>비밀번호 <span style="color:var(--text3);font-weight:400;">(다음 로그인에 사용)</span></label>
-      <input type="password" id="inPw" placeholder="비밀번호 입력" autocomplete="new-password">
+      <div style="position:relative">
+        <input type="password" id="inPw" placeholder="비밀번호 입력" autocomplete="new-password" style="padding-right:44px">
+        <button type="button" onclick="togglePw('inPw',this)" aria-label="비밀번호 보기" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#98a2b3;padding:6px;display:flex;align-items:center">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
     </div>
     <div class="field">
       <label>비밀번호 확인</label>
-      <input type="password" id="inPw2" placeholder="비밀번호 다시 입력" autocomplete="new-password">
+      <div style="position:relative">
+        <input type="password" id="inPw2" placeholder="비밀번호 다시 입력" autocomplete="new-password" style="padding-right:44px">
+        <button type="button" onclick="togglePw('inPw2',this)" aria-label="비밀번호 보기" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#98a2b3;padding:6px;display:flex;align-items:center">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      </div>
     </div>
     <div class="agree-box">
       <div class="agree-row agree-all">
@@ -678,7 +692,7 @@
     </div>
   </div>
 
-  <button class="btn btn-main" id="authBtn" onclick="doAuth()">확인</button>
+  <button class="btn btn-main" id="authBtn" onclick="doAuth()">시작하기</button>
   <div id="authErr" class="auth-err hidden"></div>
 
   <!-- 구글 로그인 (전화번호 아래, 보조 수단) -->
@@ -1238,7 +1252,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "4.0.0";
+const CUST_APP_VERSION = "5.0.0";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
@@ -1659,6 +1673,18 @@ function _fmtPhone(el){
     else{ box.style.display="none"; }
   }
 }
+// ── 비밀번호 보기/숨기기 토글 ──
+function togglePw(inputId, btn){
+  var el=document.getElementById(inputId); if(!el) return;
+  var show = el.type==="password";
+  el.type = show ? "text" : "password";
+  // 아이콘 교체: 보기 상태면 눈에 사선(가림)
+  if(btn){
+    btn.innerHTML = show
+      ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="2" y1="2" x2="22" y2="22"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+  }
+}
 // ── 전화번호 해시 (개인정보 절대 방지: 원문 저장 안 함) ──
 // 브라우저 내장 SHA-256. 같은 번호 → 항상 같은 해시. 해시→번호 복원 불가.
 async function hashPhone(phone){
@@ -1947,7 +1973,7 @@ function resetAuthBtn(){
     $("authBtn").textContent = JOIN_ARRIVAL ? ((JOIN_ROLE==="manager"?"매니저":"직원")+"로 등록하기") : "가입하고 시작하기";
   }
   else if($("loginPwWrap")&&!$("loginPwWrap").classList.contains("hidden")){ $("authBtn").textContent="로그인"; }
-  else{ $("authBtn").textContent="확인"; }
+  else{ $("authBtn").textContent="시작하기"; }
 }
 function saveSession(ph){ if(PEEK_MODE) return; try{ localStorage.setItem("cust_hash",ph); }catch(e){} }
 
@@ -1998,8 +2024,8 @@ async function loginWithGoogle(){
   var msg=$("googleAuthMsg");
   if(msg){ msg.textContent="구글 로그인 창을 여는 중…"; msg.style.color="var(--text3)"; }
   try{
-    // 돌아올 주소에 현재 매장/모드 파라미터를 유지 (구글 다녀와도 이 매장으로 복귀)
-    var back=location.origin+"/customer.html"+location.search;
+    // 돌아올 주소 = 지금 이 페이지(파일명 자동). 구글 다녀와도 이 매장으로 복귀
+    var back=location.origin+location.pathname+location.search;
     var { error }=await sb.auth.signInWithOAuth({
       provider:"google",
       options:{ redirectTo:back }
