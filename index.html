@@ -165,7 +165,7 @@
   .cust-tabbar .ctab.on{color:var(--primary)}
   .cust-tabbar .ctab .cbadge{position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;background:#e5484d;color:#fff;font-size:10px;font-weight:800;border-radius:9px;display:none;align-items:center;justify-content:center;line-height:1}
   .cust-tabbar .ctab .cbadge.show{display:flex}
-  body.cust-has-tabbar .wrap{padding-bottom:90px}
+  body.cust-has-tabbar .wrap{padding-bottom:120px;min-height:calc(100dvh + 60px);}
   .cust-page{display:none}
   .cust-page.on{display:block}
 
@@ -570,7 +570,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.5.0 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.6.0 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1256,7 +1256,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.5.0";
+const CUST_APP_VERSION = "5.6.0";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
@@ -1535,7 +1535,7 @@ function _adCardInner(a, gi){
       (a.title?'<div style="font-size:14px;font-weight:800;margin-top:8px">'+esc(a.title)+'</div>':'')+
       (a.sub?'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+esc(a.sub)+'</div>':'')+'</div>';
   }else if(a.image_url && a.image_url.length>5){
-    return '<div onclick="clickAdSection(\''+gi+'\')" style="border-radius:14px;overflow:hidden;cursor:pointer;line-height:0"><img src="'+esc(a.image_url)+'" style="width:100%;display:block"></div>';
+    return '<div onclick="clickAdSection(\''+gi+'\')" style="position:relative;width:100%;padding-bottom:40%;border-radius:14px;overflow:hidden;cursor:pointer;background:#f4f6f9"><img src="'+esc(a.image_url)+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block"></div>';
   }
   return '<div onclick="clickAdSection(\''+gi+'\')" style="border-radius:14px;padding:18px;background:linear-gradient(135deg,var(--primary),#1b64da);color:#fff;cursor:pointer">'+
     '<div style="font-size:15px;font-weight:800">'+esc(a.title||"브랜드 소식")+'</div>'+
@@ -3459,6 +3459,17 @@ async function enterMain(){
   $("introView").classList.add("hidden");
   showCustTabbar();
   _hideBootMask();
+  // ★ 홈 스크롤 막힘 방지: 화면을 덮을 수 있는 모든 오버레이 강제 제거 + 스크롤 복구
+  try{
+    ["introView","bootMask","installGate","authView","boxView","gphoneView","pwa-ios-bg"].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){ el.style.display="none"; el.classList.add("hidden"); }
+    });
+    document.documentElement.style.overflow="";
+    document.body.style.overflow="";
+    document.body.style.position="";
+    document.body.style.height="";
+  }catch(e){}
   // 상단: 브랜드명 표시 (데모=?brand= 우선 / 실제=고객 brand → 매장 brand)
   var brandCode="";
   if(DEMO_MODE){ try{ brandCode=new URLSearchParams(location.search).get("brand")||""; }catch(e){} }
