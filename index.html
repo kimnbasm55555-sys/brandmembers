@@ -409,9 +409,10 @@
     background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:20px;backdrop-filter:blur(4px);}
   .ad-mute svg{width:14px;height:14px;}
 
-  .auth-wrap{padding:52px 22px calc(80px + env(safe-area-inset-bottom));min-height:100vh;min-height:100dvh;
-    background:linear-gradient(180deg,#f4faff 0%,#ffffff 30%);
-    overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .auth-wrap{position:fixed;inset:0;max-width:460px;margin:0 auto;z-index:9998;
+    padding:52px 22px calc(80px + env(safe-area-inset-bottom));
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    background:linear-gradient(180deg,#f4faff 0%,#ffffff 30%);}
   .auth-ic{width:62px;height:62px;border-radius:18px;background:var(--primary-soft);color:var(--primary);
     display:flex;align-items:center;justify-content:center;margin:0 auto 20px;overflow:hidden;
     box-shadow:0 8px 24px rgba(59,76,202,.16);}
@@ -571,7 +572,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.1.0 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.3.0 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1257,7 +1258,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.1.0";
+const CUST_APP_VERSION = "5.3.0";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
