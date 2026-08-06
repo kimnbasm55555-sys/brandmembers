@@ -570,7 +570,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.4.0 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.5.0 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1256,7 +1256,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.4.0";
+const CUST_APP_VERSION = "5.5.0";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
@@ -1498,6 +1498,16 @@ async function loadCustHomeAd(){
   _custAdLoaded=true;
   var td=new Date().toISOString().slice(0,10);
   var brandAds=[];
+  // ① 착한창업 상단 배너 (본사가 프리미엄으로 등록 → 클릭 시 착한창업 상세로)
+  try{
+    var {data:sb0}=await sbRead.from("brand_startup").select("id,brand_name,benefit_summary,top_banner_url,top_banner_on").eq("top_banner_on",true);
+    (sb0||[]).forEach(function(s){
+      if(s.top_banner_url && s.top_banner_url.length>5){
+        brandAds.push({ _type:"startup", id:s.id, image_url:s.top_banner_url, title:s.brand_name, sub:s.benefit_summary, tag:"창업 브랜드 소식" });
+      }
+    });
+  }catch(e){}
+  // ② 기존 brand_ads (외부 광고주)
   try{
     var {data:ba}=await sbRead.from("brand_ads").select("*").eq("status","active").order("priority",{ascending:false});
     (ba||[]).forEach(function(a){
@@ -1506,6 +1516,8 @@ async function loadCustHomeAd(){
       }
     });
   }catch(e){}
+  // 랜덤 셔플 (공정 노출)
+  for(var i=brandAds.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=brandAds[i];brandAds[i]=brandAds[j];brandAds[j]=t; }
   _adBrandList=brandAds;
   _renderAdSection("brand");
   if(_adBrandList.length>1){
@@ -1546,9 +1558,25 @@ function _renderAdSection(group){
 function clickAdSection(group){
   try{
     var a=_adBrandList[_adBrandIdx]; if(!a) return;
+    // 착한창업 배너 → 착한창업 탭 전환 + 그 브랜드 상세 자동 오픈
+    if(a._type==="startup" && a.id){
+      openBenefitDetail(a.id);
+      return;
+    }
+    // 기존 외부 광고주(brand_ads) → 링크
     sbRead.from("brand_ads").update({click_count:(a.click_count||0)+1}).eq("id",a.id);
     if(a.link_url){ window.open(a.link_url,"_blank"); }
   }catch(e){}
+}
+// 착한창업 탭으로 전환하고, 특정 브랜드 상세를 iframe에 열도록 함
+function openBenefitDetail(startupId){
+  try{ custTab("benefit"); }catch(e){}
+  var uid = (typeof CUST!=="undefined" && CUST && CUST.phone_hash) ? CUST.phone_hash : "";
+  var host=document.getElementById("custBenefitHost");
+  if(host){
+    _custBenefitLoaded=true;
+    host.innerHTML='<iframe src="/index.html?only=benefit&open='+encodeURIComponent(startupId)+'&uid='+encodeURIComponent(uid)+'" style="width:100%;border:none;height:calc(100vh - 150px);border-radius:12px" title="착한창업"></iframe>';
+  }
 }
 
 // 착한창업 탭 (직원용 — 혜택 브랜드 목록)
