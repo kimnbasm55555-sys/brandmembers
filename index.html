@@ -172,11 +172,11 @@
   .ts-wx-mini .hilo{font-size:10.5px;display:flex;gap:4px}
   .ts-wx-mini .hilo .hi{color:#ef4444;font-weight:700}
   .ts-wx-mini .hilo .lo{color:#3b82f6;font-weight:700}
-  html{overscroll-behavior-y:none;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;height:auto;}
+  html{overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;height:auto;}
   body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.5;
     max-width:460px;margin:0 auto;position:relative;font-size:14px;-webkit-font-smoothing:antialiased;
-    overscroll-behavior-y:none;overflow-x:hidden;overflow-y:visible;
-    height:auto;min-height:100vh;}   /* min-height만: 콘텐츠가 길면 자연히 늘어나 스크롤됨 (dvh 제거 = 모바일 안정) */
+    overflow-x:hidden;overflow-y:visible;
+    height:auto;min-height:100vh;}   /* overscroll-behavior 제거: 일부 안드로이드에서 터치 스크롤을 막는 문제 회피 */
   .wrap{padding:0 16px 40px;}
   .hidden{display:none!important;}
   /* 고객 하단 탭바 */
@@ -591,7 +591,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.2 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.3 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1279,7 +1279,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.2";
+const CUST_APP_VERSION = "5.9.3";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
