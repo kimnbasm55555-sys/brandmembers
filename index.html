@@ -591,7 +591,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.1 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.2 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1279,7 +1279,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.1";
+const CUST_APP_VERSION = "5.9.2";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
@@ -2681,6 +2681,27 @@ function renderCustHome(){
   try{ if(typeof loadCustHomeAd==='function') loadCustHomeAd(); }catch(e){}
   // ★ 매장별 통합 카드 (본사이벤트+스탬프+쿠폰)
   try{ renderStoreCards(); }catch(e){}
+  // ── 스크롤 진단 (임시) : 실제 상태를 화면에 띄움 ──
+  setTimeout(function(){
+    try{
+      var de=document.documentElement, bd=document.body;
+      var info="📏 진단 | 화면:"+window.innerHeight
+        +" / body높이:"+bd.scrollHeight
+        +" / 스크롤가능:"+((bd.scrollHeight>window.innerHeight)?"YES":"NO")
+        +" / html.overflowY:"+getComputedStyle(de).overflowY
+        +" / body.overflowY:"+getComputedStyle(bd).overflowY;
+      var box=document.getElementById("_scrollDiag");
+      if(!box){
+        box=document.createElement("div");
+        box.id="_scrollDiag";
+        box.style.cssText="position:fixed;top:70px;left:8px;right:8px;z-index:2147483647;background:#e5484d;color:#fff;font-size:11px;padding:8px 10px;border-radius:8px;line-height:1.5;font-family:monospace;box-shadow:0 4px 12px rgba(0,0,0,.3)";
+        box.onclick=function(){ this.style.display="none"; };
+        document.body.appendChild(box);
+      }
+      box.textContent=info+"  (탭하면 닫힘)";
+      box.style.display="block";
+    }catch(e){}
+  }, 1200);
 }
 
 // ══════ 매장별 통합 카드 슬라이더 ══════
