@@ -189,6 +189,30 @@
   body.cust-has-tabbar .wrap{padding-bottom:120px;}
   .cust-page{display:none}
   .cust-page.on{display:block}
+  /* ===== 내정보(me) 노트앱 스타일 ===== */
+  .me-prof{display:flex;align-items:center;gap:14px;background:#fff;border:0.5px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .me-av{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--primary),#5b6ce0);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0}
+  .me-pn{font-size:17px;font-weight:800;color:var(--ink)}
+  .me-pm{font-size:13px;color:var(--text3);margin-top:3px}
+  .me-card{background:#fff;border:0.5px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px}
+  .me-sec{font-size:12px;font-weight:800;color:var(--text3);margin:18px 4px 8px}
+  .me-item{padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:0.5px solid #f4f6f8}
+  .me-item:last-child{border-bottom:none}
+  .me-item .mi{width:22px;height:22px;stroke:var(--text2);fill:none;stroke-width:2;flex-shrink:0}
+  .me-item .ml{flex:1;font-size:14.5px;font-weight:600;color:var(--ink)}
+  .me-item .arr{width:18px;height:18px;stroke:#c1c8d1;fill:none;stroke-width:2;flex-shrink:0}
+  /* 가입매장 현황 */
+  .me-store{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:0.5px solid #f4f6f8}
+  .me-store:last-child{border-bottom:none}
+  .me-slogo{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+  .me-smid{flex:1;min-width:0}
+  .me-snm{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .me-sinfo{font-size:11.5px;color:var(--text3);margin-top:2px}
+  .me-sleave{font-size:12px;font-weight:700;color:#e5484d;background:#ffeaea;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;flex-shrink:0;font-family:inherit}
+  .me-field{margin-bottom:12px}
+  .me-field label{display:block;font-size:12.5px;font-weight:700;color:var(--text2);margin-bottom:6px}
+  .me-field input{width:100%;height:46px;border:1px solid var(--line);border-radius:11px;padding:0 13px;font-size:15px;font-family:inherit;background:#fff}
+  .me-field input:disabled{background:#f7f8f9;color:var(--text3)}
 
   /* PWA 설치 배너 */
   .pwa-banner{position:fixed;left:12px;right:12px;bottom:12px;z-index:100000;max-width:440px;margin:0 auto;
@@ -591,7 +615,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.3 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.5 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1134,12 +1158,81 @@
 
     <!-- ===== 내정보 탭 ===== -->
     <div class="cust-page" id="cpage-me">
-      <div class="card">
-        <div style="font-size:16px;font-weight:800;margin-bottom:4px">내정보</div>
-        <div style="font-size:12.5px;color:var(--text3);margin-bottom:16px">내 정보와 비밀번호를 수정할 수 있어요.</div>
-        <button class="btn" onclick="openMyPage()" style="width:100%">마이페이지 열기</button>
+      <!-- 상단 프리미엄 배너 -->
+      <div id="me-top-banner" style="margin-bottom:14px"></div>
+      <div style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.02em;padding:8px 2px 14px">내정보</div>
+
+      <!-- 프로필 카드 -->
+      <div class="me-prof">
+        <div class="me-av" id="me-av">고</div>
+        <div style="flex:1;min-width:0">
+          <div class="me-pn" id="me-name">고객님</div>
+          <div class="me-pm" id="me-phone">—</div>
+        </div>
       </div>
-      <div class="foot"><a onclick="doLogout()">로그아웃</a></div>
+
+      <!-- 가입매장 현황 -->
+      <div class="me-sec">내 단골 매장</div>
+      <div class="me-card" id="me-stores"><div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">불러오는 중…</div></div>
+
+      <!-- 정보 수정 -->
+      <div class="me-sec">정보 수정</div>
+      <div class="me-card" style="padding:16px">
+        <div class="me-field"><label>아이디 (전화번호)</label>
+          <input type="text" id="myPhone" disabled></div>
+        <div class="me-field"><label>거주 지역</label>
+          <input type="text" id="myRegion" placeholder="예: 연희동"></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin:6px 0 14px;cursor:pointer">
+          <input type="checkbox" id="myMkt" style="width:18px;height:18px;accent-color:var(--primary)">
+          <span>이벤트·혜택 광고성 정보 수신 동의</span>
+        </label>
+        <button class="btn btn-main" onclick="saveMyInfo()">정보 저장</button>
+      </div>
+
+      <!-- 비밀번호 변경 -->
+      <div class="me-sec">비밀번호 변경</div>
+      <div class="me-card" style="padding:16px">
+        <div class="me-field"><label>현재 비밀번호 <span style="color:var(--text3);font-weight:400">(미설정 시 비워두세요)</span></label>
+          <input type="password" id="myCurPw" placeholder="현재 비밀번호" autocomplete="current-password"></div>
+        <div class="me-field"><label>새 비밀번호</label>
+          <input type="password" id="myNewPw" placeholder="새 비밀번호 (4자 이상)" autocomplete="new-password"></div>
+        <div class="me-field"><label>새 비밀번호 확인</label>
+          <input type="password" id="myNewPw2" placeholder="새 비밀번호 다시 입력" autocomplete="new-password"></div>
+        <button class="btn" style="background:var(--primary-soft);color:var(--primary);font-weight:700" onclick="changeMyPw()">비밀번호 변경</button>
+        <div id="myErr" style="color:#dc2626;font-size:12.5px;margin-top:12px;display:none"></div>
+      </div>
+
+      <!-- 알림·약관 -->
+      <div class="me-card" style="margin-top:6px">
+        <div class="me-item" onclick="meToggleNoti()">
+          <svg class="mi" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="ml">알림 설정</span>
+          <span id="me-noti-state" style="font-size:12px;color:var(--text3);margin-right:4px">확인 중</span>
+          <svg class="arr" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="me-item" onclick="window.open('legal.html#terms','_blank')">
+          <svg class="mi" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+          <span class="ml">약관 및 정책</span>
+          <svg class="arr" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+
+      <!-- 로그아웃 -->
+      <div class="me-card">
+        <div class="me-item" onclick="doLogout()">
+          <svg class="mi" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span class="ml">로그아웃</span>
+        </div>
+      </div>
+
+      <!-- 회원탈퇴 -->
+      <div style="text-align:center;margin-top:18px">
+        <span onclick="doWithdraw()" style="display:inline-block;font-size:14px;color:var(--text3);text-decoration:underline;cursor:pointer;padding:12px 24px">회원 탈퇴</span>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--text3);line-height:1.7">
+        브랜드멤버스 <span id="me-version">v1.0.0</span>
+      </div>
+      <div aria-hidden="true" style="height:80px"></div>
     </div>
 
   </div><!-- /wrap -->
@@ -1279,7 +1372,9 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.3";
+const CUST_APP_VERSION = "5.9.5";
+// 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
+const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
@@ -1598,7 +1693,7 @@ function openBenefitDetail(startupId){
   var host=document.getElementById("custBenefitHost");
   if(host){
     _custBenefitLoaded=true;
-    host.innerHTML='<iframe src="/index.html?only=benefit&open='+encodeURIComponent(startupId)+'&uid='+encodeURIComponent(uid)+'" style="width:100%;border:none;height:calc(100vh - 150px);border-radius:12px" title="착한창업"></iframe>';
+    host.innerHTML='<iframe src="'+BN_APP_URL+'/index.html?only=benefit&open='+encodeURIComponent(startupId)+'&uid='+encodeURIComponent(uid)+'" style="width:100%;border:none;height:calc(100vh - 150px);border-radius:12px" title="착한창업"></iframe>';
   }
 }
 
@@ -1616,7 +1711,7 @@ function renderStaffBenefit(){
   _staffBenefitIframeLoaded=true;
   // 직원 로그인 식별자(전화번호 해시)를 uid로 전달 → index가 착한창업만 표시
   var uid = (CUST && CUST.phone_hash) ? CUST.phone_hash : "";
-  f.src = "/index.html?only=benefit&uid=" + encodeURIComponent(uid);
+  f.src = BN_APP_URL + "/index.html?only=benefit&uid=" + encodeURIComponent(uid);
 }
 function _renderStaffBnfList(){
   var host=$("staff-benefit-body");
@@ -2647,21 +2742,106 @@ function custTab(t){
     b.classList.toggle('on', b.dataset.ct===t);
   });
   window.scrollTo(0,0);
+  // 내정보 탭: 프로필·매장·정보 채우기
+  if(t==='me'){ try{ renderCustMe(); }catch(e){} }
   // 착한창업: 처음 누를 때 index의 착한창업을 iframe으로 로드 (코드 중복 없이 연결)
   if(t==='benefit' && !_custBenefitLoaded){
     _custBenefitLoaded=true;
     var host=document.getElementById('custBenefitHost');
     if(host){
       var uid = (typeof CUST!=='undefined' && CUST && CUST.phone_hash) ? CUST.phone_hash : '';
-      host.innerHTML = '<iframe src="/index.html?only=benefit&uid='+encodeURIComponent(uid)+'" style="width:100%;border:none;height:calc(100vh - 150px);border-radius:12px" title="착한창업"></iframe>';
+      host.innerHTML = '<iframe src="'+BN_APP_URL+'/index.html?only=benefit&uid='+encodeURIComponent(uid)+'" style="width:100%;border:none;height:calc(100vh - 150px);border-radius:12px" title="착한창업"></iframe>';
     }
   }
+}
+// ── 고객 내정보 렌더 (프로필·매장·정보·버전) ──
+var _custMeLoaded=false;
+function renderCustMe(){
+  // 프로필
+  try{
+    var nm=(CUST&&CUST.name)?CUST.name:"고객님";
+    var ph=(CUST&&CUST.phone)?CUST.phone:"";
+    var av=$("me-av"); if(av) av.textContent=nm.trim().charAt(0)||"고";
+    var mn=$("me-name"); if(mn) mn.textContent=nm;
+    var mp=$("me-phone"); if(mp) mp.textContent=ph||"—";
+    var vp=$("me-version"); if(vp) vp.textContent="v"+CUST_APP_VERSION;
+  }catch(e){}
+  // 정보수정 값 채우기 (기존 openMyPage가 하던 것)
+  try{
+    var phEl=$("myPhone"); if(phEl) phEl.value=(CUST&&CUST.phone)?CUST.phone:"";
+    var rgEl=$("myRegion"); if(rgEl && CUST) rgEl.value=CUST.region||"";
+    var mkEl=$("myMkt"); if(mkEl && CUST) mkEl.checked=!!CUST.marketing_ok;
+  }catch(e){}
+  // 상단 배너 (홈과 동일 소스)
+  try{ _loadMeBanner(); }catch(e){}
+  // 가입매장 현황
+  try{ _renderMeStores(); }catch(e){}
+  // 알림 상태 표시
+  try{ _meNotiState(); }catch(e){}
+}
+// 알림 상태 표시
+function _meNotiState(){
+  var el=$("me-noti-state"); if(!el) return;
+  if(!("Notification" in window)){ el.textContent="미지원"; return; }
+  el.textContent=(Notification.permission==="granted")?"켜짐":"꺼짐";
+}
+// 알림 켜기
+function meToggleNoti(){
+  if(!("Notification" in window)){ toast("이 브라우저는 알림을 지원하지 않아요"); return; }
+  if(Notification.permission==="granted"){ toast("알림이 이미 켜져 있어요"); return; }
+  try{ if(typeof custEnablePush==="function"){ custEnablePush(); setTimeout(_meNotiState,1500); } }catch(e){}
+}
+// 내정보 상단 배너 (착한창업 top_banner 재사용)
+async function _loadMeBanner(){
+  var host=$("me-top-banner"); if(!host) return;
+  try{
+    var {data}=await sbRead.from("brand_startup").select("id,brand_name,benefit_summary,top_banner_url,top_banner_on").eq("top_banner_on",true);
+    var list=(data||[]).filter(function(s){ return s.top_banner_url && s.top_banner_url.length>5; });
+    if(!list.length){ host.innerHTML=""; return; }
+    var b=list[Math.floor(Math.random()*list.length)];
+    host.innerHTML="<div onclick=\"openBenefitDetail('"+esc(b.id)+"')\" style=\"position:relative;width:100%;padding-bottom:40%;border-radius:14px;overflow:hidden;cursor:pointer;background:#f4f6f9\"><img src='"+esc(b.top_banner_url)+"' style='position:absolute;inset:0;width:100%;height:100%;object-fit:cover'></div>";
+  }catch(e){ host.innerHTML=""; }
+}
+// 가입매장 현황 목록 (단골매장 + 개별 탈퇴)
+function _renderMeStores(){
+  var host=$("me-stores"); if(!host) return;
+  var list=(_storeData||[]);
+  if(!list.length){
+    host.innerHTML="<div style='padding:22px;text-align:center;color:var(--text3);font-size:13px'>아직 단골 매장이 없어요.<br>매장 QR을 찍으면 여기에 표시돼요.</div>";
+    return;
+  }
+  var goal=(typeof GOAL!=='undefined'&&GOAL>0)?GOAL:12;
+  host.innerHTML=list.map(function(s){
+    var initial=(s.name||"매").trim().charAt(0);
+    var color=(typeof _scColorFor==='function')?_scColorFor(s.code):"#3b4cca";
+    var bal=(s.balance||0)%goal;
+    return "<div class='me-store'>"
+      + "<div class='me-slogo' style='background:"+color+"'>"+esc(initial)+"</div>"
+      + "<div class='me-smid'><div class='me-snm'>"+esc(s.name)+"</div>"
+      +   "<div class='me-sinfo'>스탬프 "+bal+"/"+goal+"</div></div>"
+      + "<button class='me-sleave' onclick=\"leaveStore('"+esc(s.code)+"','"+esc(s.name).replace(/'/g,"")+"')\">탈퇴</button>"
+      + "</div>";
+  }).join("");
+}
+// 단골매장 탈퇴 (그 매장 스탬프·쿠폰만 삭제, 계정 유지)
+async function leaveStore(code, name){
+  if(!code) return;
+  if(!confirm("["+name+"] 단골을 그만두시겠어요?\n\n⚠️ 이 매장의 스탬프와 쿠폰이 모두 사라지며, 되돌릴 수 없어요.")) return;
+  try{
+    var ph=(CUST&&CUST.phone_hash)?CUST.phone_hash:"";
+    if(!ph){ toast("로그인 정보를 확인할 수 없어요"); return; }
+    await sb.from("stamps").delete().eq("phone_hash",ph).eq("store_code",code);
+    await sb.from("coupons").delete().eq("phone_hash",ph).eq("store_code",code);
+    // 로컬 목록에서 제거
+    _storeData=(_storeData||[]).filter(function(s){ return s.code!==code; });
+    toast("["+name+"] 단골에서 제외됐어요");
+    _renderMeStores();
+  }catch(e){ toast("탈퇴 처리 중 오류가 발생했어요"); }
 }
 // 로그인 후 탭바 표시
 function showCustTabbar(){
   document.body.classList.add('cust-has-tabbar');
-  var _ctb=document.getElementById('custTabbar'); if(_ctb) _ctb.style.display='flex';
-}
+  var _ctb=document.getElementById('custTabbar'); if(_ctb) _ctb.style.display='flex';}
 
 // ── 고객 홈: 카드 그리드 (인사말 → 브랜드광고 → 본사광고 → 날씨 → 스탬프 → 쿠폰) ──
 function renderCustHome(){
@@ -2681,27 +2861,6 @@ function renderCustHome(){
   try{ if(typeof loadCustHomeAd==='function') loadCustHomeAd(); }catch(e){}
   // ★ 매장별 통합 카드 (본사이벤트+스탬프+쿠폰)
   try{ renderStoreCards(); }catch(e){}
-  // ── 스크롤 진단 (임시) : 실제 상태를 화면에 띄움 ──
-  setTimeout(function(){
-    try{
-      var de=document.documentElement, bd=document.body;
-      var info="📏 진단 | 화면:"+window.innerHeight
-        +" / body높이:"+bd.scrollHeight
-        +" / 스크롤가능:"+((bd.scrollHeight>window.innerHeight)?"YES":"NO")
-        +" / html.overflowY:"+getComputedStyle(de).overflowY
-        +" / body.overflowY:"+getComputedStyle(bd).overflowY;
-      var box=document.getElementById("_scrollDiag");
-      if(!box){
-        box=document.createElement("div");
-        box.id="_scrollDiag";
-        box.style.cssText="position:fixed;top:70px;left:8px;right:8px;z-index:2147483647;background:#e5484d;color:#fff;font-size:11px;padding:8px 10px;border-radius:8px;line-height:1.5;font-family:monospace;box-shadow:0 4px 12px rgba(0,0,0,.3)";
-        box.onclick=function(){ this.style.display="none"; };
-        document.body.appendChild(box);
-      }
-      box.textContent=info+"  (탭하면 닫힘)";
-      box.style.display="block";
-    }catch(e){}
-  }, 1200);
 }
 
 // ══════ 매장별 통합 카드 슬라이더 ══════
