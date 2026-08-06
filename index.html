@@ -51,12 +51,12 @@
   .home-adtag .ad{font-size:9.5px;color:#aab3bd;background:#f1f3f6;padding:1px 6px;border-radius:5px;font-weight:600}
 
   /* ===== 스탬프 가로 스크롤 카드 ===== */
-  .stamp-hscroll{display:flex;gap:11px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+  .stamp-hscroll{display:flex;gap:11px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x;
     overscroll-behavior-x:contain;padding:2px 2px 4px;scroll-snap-type:x proximity}
   .stamp-hscroll::-webkit-scrollbar{display:none}
 
   /* ===== 매장별 통합 카드 슬라이더 (본사이벤트+스탬프+쿠폰) ===== */
-  .sc-track{display:flex;gap:11px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+  .sc-track{display:flex;gap:11px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x;
     overscroll-behavior-x:contain;scroll-snap-type:x mandatory;padding:2px 0 4px;margin:0 -16px;
     scroll-padding-left:16px}
   .sc-track::-webkit-scrollbar{display:none}
@@ -120,7 +120,7 @@
   .st-mini .rdy-badge{position:absolute;top:11px;right:11px;font-size:10px;font-weight:800;color:#fff;background:var(--primary);border-radius:20px;padding:2px 7px}
 
   /* ===== 날씨 + 특수일 스트립 (노트앱 이식) ===== */
-  .top-strip{display:flex;align-items:stretch;gap:8px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;max-width:100%;padding-bottom:2px}
+  .top-strip{display:flex;align-items:stretch;gap:8px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;max-width:100%;padding-bottom:2px}
   .top-strip::-webkit-scrollbar{display:none}
   .ts-issue-wrap{flex:0 0 auto;min-width:158px;height:62px;overflow:hidden;border-radius:14px;position:relative;cursor:pointer}
   .ts-issue-wrap:active{transform:scale(.97);transition:transform .1s}
@@ -315,7 +315,7 @@
   .store-name .pin{width:15px;height:15px;color:var(--primary);}
   .store-badge{font-size:11px;font-weight:700;color:var(--primary);background:var(--primary-soft);padding:3px 9px;border-radius:20px;}
   /* 매장 선택 칩 (가로 스크롤) */
-  .store-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .store-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-x;}
   .store-chips::-webkit-scrollbar{display:none;}
   .store-chip{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:22px;
     background:#f2f4f7;border:1.5px solid transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;}
@@ -570,7 +570,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.7.0 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.8.0 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1256,7 +1256,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.7.0";
+const CUST_APP_VERSION = "5.8.0";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
