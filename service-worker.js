@@ -3,7 +3,7 @@
 //  ★ 배포할 때마다 CACHE_VERSION 숫자를 한 칸 올리세요 (v1 → v2 → ...)
 //    안 올리면 사용자 폰에 옛 화면이 계속 남습니다.
 // ============================================================
-const CACHE_VERSION = "v12";
+const CACHE_VERSION = "v13";
 const CACHE_NAME = "brandmembers-" + CACHE_VERSION;
 
 self.addEventListener("install", function(e){
