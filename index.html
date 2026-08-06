@@ -191,7 +191,7 @@
   .cust-page.on{display:block}
   /* ===== 내정보(me) 노트앱 스타일 ===== */
   .me-prof{display:flex;align-items:center;gap:14px;background:#fff;border:0.5px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
-  .me-av{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--primary),#5b6ce0);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0}
+  .me-av{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--primary),#5b6ce0);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0}
   .me-pn{font-size:17px;font-weight:800;color:var(--ink)}
   .me-pm{font-size:13px;color:var(--text3);margin-top:3px}
   .me-card{background:#fff;border:0.5px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px}
@@ -615,7 +615,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.9 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.10 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1392,7 +1392,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.9";
+const CUST_APP_VERSION = "5.9.10";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -2793,7 +2793,7 @@ function renderCustMe(){
     var tail=(CUST&&CUST.phone_tail)?String(CUST.phone_tail).replace(/[^0-9]/g,""):"";
     if(!tail && CUST && CUST.phone){ tail=String(CUST.phone).replace(/[^0-9]/g,"").slice(-4); }
     var maskPh=tail ? ("***-****-"+tail) : "회원";
-    var av=$("me-av"); if(av) av.textContent=tail?tail.slice(-2):"회";
+    var av=$("me-av"); if(av) av.textContent="고객";
     var mn=$("me-name"); if(mn) mn.textContent=maskPh;
     var mp=$("me-phone"); if(mp) mp.style.display="none";
     var vp=$("me-version"); if(vp) vp.textContent="v"+CUST_APP_VERSION;
