@@ -409,12 +409,14 @@
     background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:20px;backdrop-filter:blur(4px);}
   .ad-mute svg{width:14px;height:14px;}
 
-  .auth-wrap{padding:52px 22px 40px;min-height:100vh;min-height:100dvh;
-    background:linear-gradient(180deg,#f4faff 0%,#ffffff 30%);}
+  .auth-wrap{padding:52px 22px calc(80px + env(safe-area-inset-bottom));min-height:100vh;min-height:100dvh;
+    background:linear-gradient(180deg,#f4faff 0%,#ffffff 30%);
+    overflow-y:auto;-webkit-overflow-scrolling:touch;}
   .auth-ic{width:62px;height:62px;border-radius:18px;background:var(--primary-soft);color:var(--primary);
-    display:flex;align-items:center;justify-content:center;margin:0 auto 20px;
+    display:flex;align-items:center;justify-content:center;margin:0 auto 20px;overflow:hidden;
     box-shadow:0 8px 24px rgba(59,76,202,.16);}
   .auth-ic svg{width:30px;height:30px;}
+  .auth-ic img{width:100%;height:100%;object-fit:cover;}
   .auth-title{font-size:22px;font-weight:800;text-align:center;letter-spacing:-.03em;color:var(--ink);}
   .auth-sub{font-size:13.5px;color:var(--text2);text-align:center;margin-top:9px;margin-bottom:28px;line-height:1.65;}
   .auth-sub b{color:var(--primary);font-weight:800;}
@@ -569,14 +571,14 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.0.0 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.1.0 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
 <div id="introView" class="intro-wrap">
   <div class="intro-top">
-    <div class="intro-logo" id="introLogo">
-      <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><g stroke="#3b4cca" stroke-width="7" stroke-linecap="round"><path d="M32 30.4L32 6"/><path d="M33.6 31.3L48.5 22.7"/><path d="M33.6 32.7L54.6 44.9"/><path d="M32 33.6L32 50.3"/><path d="M30.4 32.7L9.4 44.9"/><path d="M30.4 31.3L15.5 22.7"/></g></svg>
+    <div class="intro-logo" id="introLogo" style="overflow:hidden;background:transparent;padding:0">
+      <img src="icon-192.png" alt="브랜드멤버스" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'">
     </div>
     <div class="intro-brand" id="introBrand">브랜드멤버스</div>
     <span class="intro-badge" id="introBadge"></span>
@@ -621,7 +623,7 @@
 
 <div id="authView" class="auth-wrap">
   <div class="auth-ic">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M12 4v16" stroke-dasharray="2 3"/></svg>
+    <img src="icon-192.png" alt="브랜드멤버스" onerror="this.style.display='none'">
   </div>
   <div class="auth-title" id="authTitle">단골 멤버스 시작하기</div>
   <div class="auth-sub" id="authSub">단골 매장의 소식과 쿠폰, 스탬프를<br>한 곳에서 모아보세요.</div>
@@ -632,6 +634,9 @@
     <div id="phoneConfirm" style="display:none;margin-top:9px;padding:11px 14px;background:var(--primary-soft);border:1px solid #c7e6ff;border-radius:10px;text-align:center;">
       <div style="font-size:12px;color:var(--text2);margin-bottom:3px;">이 번호가 맞나요? <span style="color:var(--text3);">(로그인 아이디로 사용됩니다)</span></div>
       <div id="phoneConfirmNum" style="font-size:20px;font-weight:800;letter-spacing:1px;color:var(--primary);"></div>
+    </div>
+    <div id="authHint" style="margin-top:10px;text-align:center;font-size:13px;color:var(--text2)">
+      처음이세요? 전화번호를 입력하면 <b style="color:var(--primary)">바로 회원가입</b>돼요.
     </div>
   </div>
 
@@ -1252,7 +1257,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.0.0";
+const CUST_APP_VERSION = "5.1.0";
 
 let STORE_CODE="", STORE_NAME="", CUST=null, GOAL=12, BALANCE=0, PENDING=false;
 let JOIN_CODE="";   // 직원 초대 링크(?join=코드)로 진입 시 코드 저장
@@ -1890,6 +1895,8 @@ async function doAuth(){
     if($("loginPwWrap").classList.contains("hidden")){
       $("loginPwWrap").classList.remove("hidden");
       var _gw2=$("googleAuthWrap"); if(_gw2) _gw2.style.display="none";  // 비번 로그인 단계에선 구글 버튼 숨김
+      var _hint=$("authHint"); if(_hint) _hint.style.display="none";
+      var _at=$("authTitle"); if(_at) _at.textContent="로그인";
       $("authSub").innerHTML="비밀번호를 입력해 로그인하세요.";
       $("authBtn").textContent="로그인"; resetAuthBtn();
       $("inLoginPw").focus();
@@ -1907,6 +1914,7 @@ async function doAuth(){
   if($("signupExtra").classList.contains("hidden")){
     $("loginPwWrap").classList.add("hidden");
     $("signupExtra").classList.remove("hidden");
+    var _hint2=$("authHint"); if(_hint2) _hint2.style.display="none";
     var _gw=$("googleAuthWrap"); if(_gw) _gw.style.display="none";  // 가입 단계에선 구글 버튼 숨김
     if(JOIN_ARRIVAL){
       // 직원 초대 링크로 들어온 사람 → 고객이 아니라 '직원 등록'임을 명확히
