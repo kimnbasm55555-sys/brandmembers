@@ -615,7 +615,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.8 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.9 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1183,10 +1183,14 @@
         <div class="me-card" id="me-stores"></div>
       </div>
 
-      <!-- 찜한 브랜드 (있을 때만 표시) -->
-      <div id="me-fav-sec" style="display:none">
-        <div class="me-sec">찜한 브랜드</div>
-        <div class="me-card" id="me-fav"></div>
+      <!-- 찜한 브랜드 (메뉴 한 줄 → 누르면 목록) -->
+      <div class="me-card" style="margin-top:6px">
+        <div class="me-item" onclick="openFavList()">
+          <svg class="mi" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          <span class="ml">찜한 브랜드</span>
+          <span id="me-fav-badge" style="font-size:11px;font-weight:700;color:#e5484d;background:#ffeaea;border-radius:6px;padding:2px 7px;margin-right:6px;display:none"></span>
+          <svg class="arr" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
       </div>
 
       <!-- 정보 수정 (접이식) -->
@@ -1388,7 +1392,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.8";
+const CUST_APP_VERSION = "5.9.9";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -2784,19 +2788,20 @@ function custTab(t){
 // ── 고객 내정보 렌더 (프로필·매장·정보·버전) ──
 var _custMeLoaded=false;
 function renderCustMe(){
-  // 프로필 (개인정보 최소화: 이름 없이 전화번호 마스킹만)
+  // 프로필 (개인정보 최소화: 뒷 4자리만 저장돼 있으므로 그걸로 마스킹)
   try{
-    var rawPh=(CUST&&CUST.phone)?String(CUST.phone).replace(/[^0-9]/g,""):"";
-    var maskPh="회원";
-    if(rawPh.length>=4){ maskPh="***-****-"+rawPh.slice(-4); }
-    var av=$("me-av"); if(av) av.textContent="회";
+    var tail=(CUST&&CUST.phone_tail)?String(CUST.phone_tail).replace(/[^0-9]/g,""):"";
+    if(!tail && CUST && CUST.phone){ tail=String(CUST.phone).replace(/[^0-9]/g,"").slice(-4); }
+    var maskPh=tail ? ("***-****-"+tail) : "회원";
+    var av=$("me-av"); if(av) av.textContent=tail?tail.slice(-2):"회";
     var mn=$("me-name"); if(mn) mn.textContent=maskPh;
-    var mp=$("me-phone"); if(mp) mp.style.display="none";   // 아랫줄 숨김(이름 자리에 이미 전화)
+    var mp=$("me-phone"); if(mp) mp.style.display="none";
     var vp=$("me-version"); if(vp) vp.textContent="v"+CUST_APP_VERSION;
   }catch(e){}
   // 정보수정 값 채우기
   try{
-    var phEl=$("myPhone"); if(phEl) phEl.value=(CUST&&CUST.phone)?CUST.phone:"";
+    var t2=(CUST&&CUST.phone_tail)?String(CUST.phone_tail):"";
+    var phEl=$("myPhone"); if(phEl) phEl.value=t2?("***-****-"+t2):"";
     var mkEl=$("myMkt"); if(mkEl && CUST) mkEl.checked=!!CUST.marketing_ok;
   }catch(e){}
   // 상단 배너 (홈과 동일 소스)
@@ -2808,37 +2813,33 @@ function renderCustMe(){
   // 알림 상태 표시
   try{ _meNotiState(); }catch(e){}
 }
-// 찜한 브랜드 목록 (localStorage bn_bs_fav → brand_startup 조회)
+// 찜한 브랜드 배지 갱신 (개수)
 async function _renderMeFav(){
-  var host=$("me-fav"); var sec=$("me-fav-sec");
-  if(!host||!sec) return;
-  sec.style.display="block";   // 항상 표시
+  var badge=$("me-fav-badge"); if(!badge) return;
   var ids=[];
   try{ ids=JSON.parse(localStorage.getItem("bn_bs_fav")||"[]"); }catch(e){ ids=[]; }
-  if(!ids.length){
-    host.innerHTML="<div style='padding:22px;text-align:center;color:var(--text3);font-size:13px'>아직 찜한 브랜드가 없어요.<br>착한창업에서 마음에 드는 브랜드의 하트를 눌러보세요.</div>";
-    return;
+  if(ids.length>0){ badge.textContent=ids.length; badge.style.display="inline-block"; }
+  else { badge.style.display="none"; }
+}
+// 찜한 브랜드 목록 화면 열기 (브랜드노트 찜목록을 iframe으로)
+function openFavList(){
+  try{ custTab("benefit"); }catch(e){}
+  var uid=(CUST&&CUST.phone_hash)?CUST.phone_hash:"";
+  var host=document.getElementById("custBenefitHost");
+  if(host){
+    _custBenefitLoaded=true;
+    host.innerHTML='<iframe src="'+BN_APP_URL+'/index.html?only=benefit&fav=1&uid='+encodeURIComponent(uid)+'" title="찜한 브랜드"></iframe>';
   }
+}
+// 찜 해제 (멤버스 localStorage에서 제거)
+function unfavBrand(id){
   try{
-    var {data}=await sbRead.from("brand_startup").select("id,brand_name,biz_type,benefit_summary,thumb_url,image_url").in("id",ids);
-    var list=(data||[]);
-    if(!list.length){
-      host.innerHTML="<div style='padding:22px;text-align:center;color:var(--text3);font-size:13px'>아직 찜한 브랜드가 없어요.<br>착한창업에서 마음에 드는 브랜드의 하트를 눌러보세요.</div>";
-      return;
-    }
-    host.innerHTML=list.map(function(b){
-      var img=(b.thumb_url||b.image_url||"");
-      var thumb=(img&&img.length>5)
-        ? "<div style='width:44px;height:44px;flex-shrink:0;border-radius:10px;overflow:hidden;background:#eef0f3'><img src='"+esc(img)+"' style='width:100%;height:100%;object-fit:cover'></div>"
-        : "<div style='width:44px;height:44px;flex-shrink:0;border-radius:10px;background:linear-gradient(135deg,#e8ecf2,#d5dbe4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800'>"+esc((b.brand_name||"브").charAt(0))+"</div>";
-      return "<div class='me-store' onclick=\"openBenefitDetail('"+esc(b.id)+"')\" style='cursor:pointer'>"
-        + thumb
-        + "<div class='me-smid'><div class='me-snm'>"+esc(b.brand_name||"브랜드")+"</div>"
-        +   "<div class='me-sinfo'>"+esc(b.biz_type||"")+(b.benefit_summary?" · "+esc(b.benefit_summary):"")+"</div></div>"
-        + "<button class='me-sleave' onclick=\"event.stopPropagation();unfavBrand('"+esc(b.id)+"')\">찜해제</button>"
-        + "</div>";
-    }).join("");
-  }catch(e){ host.innerHTML="<div style='padding:22px;text-align:center;color:var(--text3);font-size:13px'>찜한 브랜드를 불러오지 못했어요.</div>"; }
+    var ids=JSON.parse(localStorage.getItem("bn_bs_fav")||"[]");
+    ids=ids.filter(function(x){ return String(x)!==String(id); });
+    localStorage.setItem("bn_bs_fav", JSON.stringify(ids));
+    toast("찜을 해제했어요");
+    _renderMeFav();
+  }catch(e){}
 }
 // 찜 해제 (멤버스 localStorage에서 제거)
 function unfavBrand(id){
