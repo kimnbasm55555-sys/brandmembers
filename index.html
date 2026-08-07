@@ -598,7 +598,7 @@
     <button onclick="igAlreadyInstalled()" style="background:none;border:none;color:#c1c8d1;font-size:11.5px;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:2px">이미 설치했는데 안 열려요</button>
   </div>
   <!-- ★ 배포 확인용 버전 배지 (새 코드 반영되면 이 숫자가 보임) -->
-  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.17 · 브랜드멤버스</div>
+  <div style="margin-top:20px;font-size:13px;font-weight:800;color:#3b4cca;background:#eaecfb;border-radius:100px;padding:6px 16px">v5.9.18 · 브랜드멤버스</div>
 </div>
 
 <!-- 인트로(스플래시) 화면 : QR 첫 진입 시 브랜드 소개 -->
@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.17";
+const CUST_APP_VERSION = "5.9.18";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -2562,7 +2562,11 @@ function initCustInappGuide(){
 // window.addEventListener("DOMContentLoaded", function(){ setTimeout(initCustInappGuide, 1200); });
 
 function _pwaIsInstalled(){
-  return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
+  var standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
+  // 설치된 앱(standalone)으로 열렸다면 '설치 완료' 기록을 남긴다.
+  // → 이후 같은 폰이 QR을 카메라로 찍어 브라우저로 열려도 재설치를 강요하지 않음
+  if(standalone){ try{ localStorage.setItem("blnk_cust_pwa_installed","1"); }catch(e){} }
+  return standalone;
 }
 function _pwaIsIos(){
   var ua=window.navigator.userAgent.toLowerCase();
@@ -2579,6 +2583,9 @@ function igAlreadyDismissed(){
 function _shouldGateInstall(){
   if(_pwaIsInstalled()) return false;
   if(igAlreadyDismissed()) return false;
+  // 이 폰에 이미 설치한 기록이 있으면(다른 매장에서 설치·로그인 완료) 재설치 강요하지 않음
+  // → QR을 일반 카메라로 찍어 브라우저로 열려도 바로 적립 가능
+  try{ if(localStorage.getItem("blnk_cust_pwa_installed")==="1") return false; }catch(e){}
   var isDemo=false, isPeek=false, isWork=false;
   try{ isDemo=(new URLSearchParams(location.search).get("demo")==="1"); }catch(e){}
   try{ isPeek=!!new URLSearchParams(location.search).get("peek"); }catch(e){}
