@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.19";
+const CUST_APP_VERSION = "5.9.20";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -2098,23 +2098,11 @@ async function doAuth(){
   var {data:ins,error:e2}=await sb.from("customers").insert(row).select().maybeSingle();
   if(e2){ err.textContent="가입 실패: "+e2.message; err.classList.remove("hidden"); resetAuthBtn(); return; }
   CUST=ins||row; saveSession(ph);
-  // 매장의 '신규가입 축하 쿠폰' 설정 확인 후 지급
+  // 매장의 '신규가입 축하 쿠폰' 지급 — 매장을 알면 즉시, 모르면 첫 적립 때 지급됨
   var welcomeGiven=false, welcomeTitle="";
   if(STORE_CODE){
-    try{
-      var {data:wc}=await sb.from("welcome_coupon").select("*").eq("store_code",STORE_CODE).maybeSingle();
-      if(wc && wc.enabled && wc.title){
-        var expISO;
-        if(wc.expiry_date){ expISO = new Date(wc.expiry_date+"T23:59:59").toISOString(); }
-        else { var exp=new Date(); exp.setDate(exp.getDate()+(wc.valid_days||7)); expISO=exp.toISOString(); }
-        await sb.from("coupons").insert({
-          code:genCode(), phone_hash:ph, store_code:STORE_CODE,
-          type:(wc.kind==="free"?"free":"welcome"), title:wc.title, memo:wc.memo||null, source:"welcome",
-          status:"issued", expires_at:expISO, viral:!!wc.viral
-        });
-        welcomeGiven=true; welcomeTitle=wc.title;
-      }
-    }catch(e){ console.log("신규 쿠폰 지급 오류:", e); }
+    welcomeTitle = await issueWelcomeIfEligible(STORE_CODE, ph);
+    welcomeGiven = !!welcomeTitle;
   }
   // 배달 박스로 진입한 경우: 2,000원 쿠폰 추가 지급
   if(BOX_MODE){
@@ -2277,20 +2265,10 @@ async function gpLinkPhone(){
       var {data:ins,error:e2}=await sb.from("customers").insert(row).select().maybeSingle();
       if(e2){ err.textContent="등록 실패: "+e2.message; err.classList.remove("hidden"); $("gpBtn").disabled=false; $("gpBtn").textContent="번호 등록하고 시작하기"; return; }
       CUST=ins||row; saveSession(ph);
-      // 신규가입 축하 쿠폰 (전화번호 가입과 동일 처리)
+      // 신규가입 축하 쿠폰 (전화번호 가입과 동일 처리) — 매장 알면 즉시, 모르면 첫 적립 때
       if(STORE_CODE){
-        try{
-          var {data:wc}=await sb.from("welcome_coupon").select("*").eq("store_code",STORE_CODE).maybeSingle();
-          if(wc && wc.enabled && wc.title){
-            var expISO;
-            if(wc.expiry_date){ expISO=new Date(wc.expiry_date+"T23:59:59").toISOString(); }
-            else{ var exp=new Date(); exp.setDate(exp.getDate()+(wc.valid_days||7)); expISO=exp.toISOString(); }
-            await sb.from("coupons").insert({ code:genCode(), phone_hash:ph, store_code:STORE_CODE,
-              type:(wc.kind==="free"?"free":"welcome"), title:wc.title, memo:wc.memo||null, source:"welcome",
-              status:"issued", expires_at:expISO, viral:!!wc.viral });
-            toast("가입 완료 · "+wc.title+" 지급 🎁");
-          }
-        }catch(e){}
+        var _wt=await issueWelcomeIfEligible(STORE_CODE, ph);
+        if(_wt) toast("가입 완료 · "+_wt+" 지급 🎁");
       }
     }
     await claimPendingGiftIfAny(ph);
@@ -3809,6 +3787,13 @@ async function enterMain(){
     }
   }catch(e){}
   loadAd();
+  // 가입 때 매장을 몰라 신규쿠폰을 못 받은 손님이 이 매장 QR로 진입 → 지금 지급 (적립 전이라도)
+  try{
+    if(!DEMO_MODE && !PEEK_MODE && STORE_CODE && CUST && CUST.phone_hash){
+      var _wt=await issueWelcomeIfEligible(STORE_CODE, CUST.phone_hash);
+      if(_wt){ toast("🎁 "+_wt+" 도착!"); }
+    }
+  }catch(e){}
   await refreshStamps(); await refreshCoupons();
   startStampRealtime();   // 매장 승인 → 손님 화면 즉시 반영
 }
@@ -6008,6 +5993,36 @@ async function renderClosingNotice(){
     host.style.display="block";
   }catch(e){ host.style.display="none"; }
 }
+// ══════════════════════════════════════════════════
+//  신규가입 축하 쿠폰 지급 (공용)
+//  · 매장(sc)의 신규쿠폰 설정이 켜져 있고
+//  · 이 손님이 그 매장 신규쿠폰을 아직 안 받았을 때만 1장 지급
+//  경로: ① 가입 시 매장을 알면 즉시  ② 매장 몰랐던 손님이 첫 적립할 때
+//  반환: 지급했으면 쿠폰 제목(string), 아니면 ""
+// ══════════════════════════════════════════════════
+async function issueWelcomeIfEligible(sc, ph){
+  try{
+    if(!sc || !ph) return "";
+    // 설정 확인
+    var {data:wc}=await sb.from("welcome_coupon").select("*").eq("store_code",sc).maybeSingle();
+    if(!(wc && wc.enabled && wc.title)) return "";
+    // 중복 방지: 이 매장 welcome 쿠폰을 이미 받았는지
+    var {data:dup}=await sb.from("coupons").select("id").eq("phone_hash",ph).eq("store_code",sc).eq("source","welcome").limit(1);
+    if(dup && dup.length) return "";
+    // 만료일 계산
+    var expISO;
+    if(wc.expiry_date){ expISO=new Date(wc.expiry_date+"T23:59:59").toISOString(); }
+    else { var exp=new Date(); exp.setDate(exp.getDate()+(wc.valid_days||7)); expISO=exp.toISOString(); }
+    var {error}=await sb.from("coupons").insert({
+      code:genCode(), phone_hash:ph, store_code:sc,
+      type:(wc.kind==="free"?"free":"welcome"), title:wc.title, memo:wc.memo||null, source:"welcome",
+      status:"issued", expires_at:expISO, viral:!!wc.viral
+    });
+    if(error){ console.log("신규 쿠폰 지급 오류:", error); return ""; }
+    return wc.title;
+  }catch(e){ console.log("신규 쿠폰 지급 예외:", e); return ""; }
+}
+
 async function doEarn(storeCode){
   if(PEEK_MODE){ toast("미리보기 화면이에요"); return; }
   var sc=storeCode||STORE_CODE||CUST.join_store||"";
@@ -6016,6 +6031,13 @@ async function doEarn(storeCode){
   var {error}=await sb.from("stamps").insert(row);
   if(error){ toast("적립 신청 실패: "+error.message); return; }
   toast("적립 신청 완료 · 매장 승인 대기중");
+  // 가입 때 매장을 몰라 신규쿠폰을 못 받은 손님 → 이 매장을 처음 이용하는 지금 지급
+  try{
+    if(sc){
+      var _wt=await issueWelcomeIfEligible(sc, CUST.phone_hash);
+      if(_wt){ toast("🎁 "+_wt+" 도착!"); }
+    }
+  }catch(e){}
   await refreshStamps();
   _fastApproveWatch();   // 신청 직후 빠르게 승인 확인
 }
