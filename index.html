@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.18";
+const CUST_APP_VERSION = "5.9.19";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -2002,18 +2002,24 @@ async function loadStoreName(code){
   }
   catch(e){ return code; }
 }
-async function loadGoal(code){
+// ── 매장별 스탬프 목표 개수 (노트앱에서 사장님이 설정한 값을 매장마다 따로 적용) ──
+var GOALS = {};          // { store_code: goal }
+var GOAL_COMMON = 12;    // 공통 기본값
+async function loadGoals(){
   try{
     var {data}=await sb.from("stamp_config").select("goal,store_code,brand,active").eq("active",true);
-    if(data&&data.length){
-      var mine=data.find(function(r){return r.store_code===code;});
-      if(mine&&mine.goal) return mine.goal;
-      var common=data.find(function(r){return !r.store_code&&!r.brand;});
-      if(common&&common.goal) return common.goal;
-    }
+    GOALS={};
+    (data||[]).forEach(function(r){
+      if(r.store_code && r.goal>0){ GOALS[r.store_code]=r.goal; }
+      else if(!r.store_code && !r.brand && r.goal>0){ GOAL_COMMON=r.goal; }
+    });
   }catch(e){}
-  return 12;
 }
+function goalFor(sc){
+  if(sc && GOALS[sc]) return GOALS[sc];
+  return (GOAL_COMMON>0)?GOAL_COMMON:12;
+}
+async function loadGoal(code){ await loadGoals(); return goalFor(code); }
 async function doAuth(){
   var phone=onlyNum($("inPhone").value);
   var err=$("authErr"); err.classList.add("hidden");
@@ -2333,7 +2339,7 @@ async function initAutoUpdate(){
   // ★ 일회성 강제 캐시 정리 (2026-08 배포) — 옛 서비스워커가 로고 등을 캐시에 붙들고 있는 문제 해결
   // 이 플래그가 없으면 한 번만 실행: 모든 캐시 삭제 + 옛 워커 해제 → 새로고침
   try{
-    var _purgeFlag = "bm_cache_purge_v2";
+    var _purgeFlag = "bm_cache_purge_v3";
     if(!localStorage.getItem(_purgeFlag)){
       localStorage.setItem(_purgeFlag, "1");
       // 모든 캐시 스토리지 삭제
@@ -2351,7 +2357,7 @@ async function initAutoUpdate(){
   }catch(e){}
 
   try{
-    var reg = await navigator.serviceWorker.register("service-worker.js");
+    var reg = await navigator.serviceWorker.register("service-worker.js", { updateViaCache: "none" });
 
     reg.addEventListener("updatefound", function(){
       var sw = reg.installing;
@@ -2882,8 +2888,8 @@ function _renderMeStores(){
     return;
   }
   if(sec) sec.style.display="block";
-  var goal=(typeof GOAL!=='undefined'&&GOAL>0)?GOAL:12;
   host.innerHTML=list.map(function(s){
+    var goal=goalFor(s.code);
     var initial=(s.name||"매").trim().charAt(0);
     var color=(typeof _scColorFor==='function')?_scColorFor(s.code):"#3b4cca";
     var bal=(s.balance||0)%goal;
@@ -3051,6 +3057,7 @@ async function renderStoreCards(){
 
   // 카드 데이터 구성 + 정렬(교환가능 → 쿠폰보유 → 스탬프많은순)
   var items=_storeData.map(function(s){
+    var goal=goalFor(s.code);
     var cur=s.balance%goal;
     var completed=s.balance>0&&cur===0;
     var show=completed?goal:cur;
@@ -3064,7 +3071,7 @@ async function renderStoreCards(){
     return b.balance-a.balance;
   });
 
-  var cards=items.map(function(it,idx){ return _scCardHtml(it,goal,idx); }).join("");
+  var cards=items.map(function(it,idx){ return _scCardHtml(it, goalFor(it.s?it.s.code:it.code), idx); }).join("");
   box.innerHTML =
     "<div class='home-sec-head'><div class='t'>내 단골 매장</div>"
     + (items.length>1?"<div class='more' style='cursor:default'>탭하면 펼쳐져요</div>":"")
@@ -5858,6 +5865,8 @@ function startStampRealtime(){
 var _storeData=[];   // [{code,name,balance,pending}]
 async function refreshStamps(){
   _storeData=[];
+  // 매장별 목표 개수 최신화 (사장님이 노트앱에서 바꾸면 즉시 반영)
+  if(!DEMO_MODE){ try{ await loadGoals(); if(STORE_CODE) GOAL=goalFor(STORE_CODE); }catch(e){} }
   // ★ 데모: 실제 stamps/stores 안 씀. 가짜 샘플 매장으로 표시.
   if(DEMO_MODE){
     if(!GOAL||GOAL<1) GOAL=12;
@@ -5920,25 +5929,27 @@ function renderStoreStamps(){
   var chipsHtml="";
   if(_storeData.length>1){
     chipsHtml="<div class='store-chips'>"+_storeData.map(function(s){
-      var cur=s.balance%GOAL; var show=(s.balance>0&&cur===0)?GOAL:cur;
-      var dot=(show>=GOAL)?"<span class='chip-dot'></span>":"";
+      var g=goalFor(s.code);
+      var cur=s.balance%g; var show=(s.balance>0&&cur===0)?g:cur;
+      var dot=(show>=g)?"<span class='chip-dot'></span>":"";
       return "<div class='store-chip"+(s.code===_selectedStore?" on":"")+"' onclick=\"selectStore('"+s.code+"')\">"+
-        dot+esc(s.name)+" <span class='chip-cnt'>"+show+"/"+GOAL+"</span></div>";
+        dot+esc(s.name)+" <span class='chip-cnt'>"+show+"/"+g+"</span></div>";
     }).join("")+"</div>";
   }
 
   var s=_storeData.filter(function(x){return x.code===_selectedStore;})[0]||_storeData[0];
   var rots=[-8,6,-5,7,-6,5,8,-7,4,-4,6,-8];
-  var cur=s.balance % GOAL;
+  var G=goalFor(s.code);
+  var cur=s.balance % G;
   var completedRound=s.balance>0 && cur===0;
-  var show=completedRound?GOAL:cur;
-  var remain=GOAL-show; if(remain<0)remain=0;
-  var canRedeem=(show>=GOAL);
+  var show=completedRound?G:cur;
+  var remain=G-show; if(remain<0)remain=0;
+  var canRedeem=(show>=G);
   var grid="";
-  for(var i=1;i<=GOAL;i++){
+  for(var i=1;i<=G;i++){
     if(i<=show){
-      var sym=(i===GOAL)?STAMP_CROWN:STAMP_SYMBOLS[(i-1)%STAMP_SYMBOLS.length];
-      grid+="<div class='stamp "+(i===GOAL?"done":"on")+"'><span class='stamp-mark' style='transform:rotate("+rots[(i-1)%rots.length]+"deg);'>"+sym+"</span></div>";
+      var sym=(i===G)?STAMP_CROWN:STAMP_SYMBOLS[(i-1)%STAMP_SYMBOLS.length];
+      grid+="<div class='stamp "+(i===G?"done":"on")+"'><span class='stamp-mark' style='transform:rotate("+rots[(i-1)%rots.length]+"deg);'>"+sym+"</span></div>";
     }else{
       grid+="<div class='stamp'><span class='stamp-num'>"+i+"</span></div>";
     }
@@ -5950,7 +5961,7 @@ function renderStoreStamps(){
   }else if(s.earnPending){
     btn="<div class='pending-note'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><polyline points='12 7 12 12 15 14'/></svg>적립 신청됨 — 매장 승인 대기중</div>";
   }else if(canRedeem){
-    btn="<button class='btn btn-success' onclick=\"doRedeem('"+s.code+"')\"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>무료 교환 신청 · 12개 완성!</button>";
+    btn="<button class='btn btn-success' onclick=\"doRedeem('"+s.code+"')\"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>무료 교환 신청 · "+G+"개 완성!</button>";
   }else if(isHere){
     btn="<button class='btn btn-earn-hero' onclick=\"doEarn('"+s.code+"')\"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='5' x2='12' y2='19'/><line x1='5' y1='12' x2='19' y2='12'/></svg>이 매장에서 적립하기</button>";
   }else{
@@ -5963,10 +5974,10 @@ function renderStoreStamps(){
       "<div class='store-head'>"+
         "<div class='store-name'><svg class='pin' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'/><circle cx='12' cy='10' r='3'/></svg>"+esc(s.name)+(isHere?" <span class='store-badge'>지금 이 매장</span>":"")+"</div>"+
       "</div>"+
-      "<div class='st-summary'><span class='n'>"+show+"</span><span class='g'>/ "+GOAL+"</span></div>"+
+      "<div class='st-summary'><span class='n'>"+show+"</span><span class='g'>/ "+G+"</span></div>"+
       "<div class='st-caption'>무료까지 <b>"+remain+"개</b> 남았어요</div>"+
       "<div class='stamp-grid'>"+grid+"</div>"+
-      "<div class='prog-bar'><div class='prog-fill' style='width:"+Math.round(show/GOAL*100)+"%'></div></div>"+
+      "<div class='prog-bar'><div class='prog-fill' style='width:"+Math.round(show/G*100)+"%'></div></div>"+
       "<div style='margin-top:14px;'>"+btn+"</div>"+
     "</div>";
 }
@@ -6030,8 +6041,9 @@ function _fastApproveWatch(){
 async function doRedeem(storeCode){
   if(PEEK_MODE){ toast("미리보기 화면이에요"); return; }
   var sc=storeCode||STORE_CODE||CUST.join_store||"";
-  if(!confirm("무료 교환을 신청할까요?\n매장 직원이 승인하면 스탬프 12개가 차감됩니다.")) return;
-  var row={ phone_hash:CUST.phone_hash, store_code:sc, amount:-GOAL, kind:"redeem", status:"pending" };
+  var g=goalFor(sc);
+  if(!confirm("무료 교환을 신청할까요?\n매장 직원이 승인하면 스탬프 "+g+"개가 차감됩니다.")) return;
+  var row={ phone_hash:CUST.phone_hash, store_code:sc, amount:-g, kind:"redeem", status:"pending" };
   var {error}=await sb.from("stamps").insert(row);
   if(error){ toast("신청 실패: "+error.message); return; }
   toast("무료 교환 신청 완료");
@@ -6378,7 +6390,8 @@ async function demoEnter(){
       if(pk.data){
         CUST=pk.data;
         if(!STORE_CODE && CUST.join_store){ STORE_CODE=CUST.join_store; }
-        if(STORE_CODE){ STORE_NAME=await loadStoreName(STORE_CODE); GOAL=await loadGoal(STORE_CODE); }
+        await loadGoals();
+        if(STORE_CODE){ STORE_NAME=await loadStoreName(STORE_CODE); GOAL=goalFor(STORE_CODE); }
         await enterMain();
         _peekBanner();
         _hideBootMask();
@@ -6426,7 +6439,8 @@ async function demoEnter(){
   }
   _bootMaskSafety();
 
-  if(STORE_CODE){ STORE_NAME=await loadStoreName(STORE_CODE); GOAL=await loadGoal(STORE_CODE); }
+  await loadGoals();   // 매장별 목표 맵은 QR 유무와 관계없이 항상 로드
+  if(STORE_CODE){ STORE_NAME=await loadStoreName(STORE_CODE); GOAL=goalFor(STORE_CODE); }
   // 초대 링크로 들어왔으면 역할(직원/매니저)을 미리 읽어 가입 화면 문구에 쓴다
   if(JOIN_ARRIVAL && STORE_CODE){
     try{
