@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.20";
+const CUST_APP_VERSION = "5.9.21";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -5881,19 +5881,23 @@ async function refreshStamps(){
   if(STORE_CODE && !byStore[STORE_CODE]) byStore[STORE_CODE]={balance:0,pending:false,earnPending:false};
 
   var codes=Object.keys(byStore);
-  // 매장명 로드
+  // 매장명 로드 — 지역 배열에 담고 마지막에 통째 교체 (동시 실행 시 중복 push 방지)
+  var built=[];
   for(var i=0;i<codes.length;i++){
     var c=codes[i]; var bal=byStore[c].balance; if(bal<0) bal=0;
     var nm=await loadStoreName(c);
-    _storeData.push({ code:c, name:nm||c, balance:bal, pending:byStore[c].pending, earnPending:byStore[c].earnPending });
+    built.push({ code:c, name:nm||c, balance:bal, pending:byStore[c].pending, earnPending:byStore[c].earnPending });
   }
   // 최근 적립 많은 순 + 현재 매장 우선, 최대 7개
-  _storeData.sort(function(a,b){
+  built.sort(function(a,b){
     if(a.code===STORE_CODE) return -1;
     if(b.code===STORE_CODE) return 1;
     return b.balance-a.balance;
   });
-  if(_storeData.length>7) _storeData=_storeData.slice(0,7);
+  if(built.length>7) built=built.slice(0,7);
+  // 코드 기준 중복 제거(안전장치)
+  var _seen={}; built=built.filter(function(x){ if(_seen[x.code]) return false; _seen[x.code]=1; return true; });
+  _storeData=built;
   renderStoreStamps();
   try{ renderCustHome(); }catch(e){}
 }
