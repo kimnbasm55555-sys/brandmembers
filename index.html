@@ -1129,6 +1129,8 @@
 
     <!-- ===== 스탬프 탭 ===== -->
     <div class="cust-page" id="cpage-stamp">
+      <!-- 프리미엄 상단 광고 (모든 탭 공통) -->
+      <div id="mad-stamp" class="home-sec"></div>
       <!-- 매장별 스탬프 카드 (최대 7개 매장) -->
       <div id="storeStamps"></div>
 
@@ -1143,6 +1145,7 @@
 
     <!-- ===== 착한창업 탭 (index 연결) ===== -->
     <div class="cust-page" id="cpage-benefit">
+      <div id="mad-benefit" class="home-sec"></div>
       <div id="custBenefitHost"><div class="empty" style="padding:50px 0;text-align:center;color:#8a909a">착한창업을 불러오는 중…</div></div>
     </div>
     <style>
@@ -1154,6 +1157,7 @@
 
     <!-- ===== 내정보 탭 ===== -->
     <div class="cust-page" id="cpage-me">
+      <div id="mad-me" class="home-sec"></div>
       <!-- 상단 프리미엄 배너 -->
       <div id="me-top-banner" style="margin:16px 0 14px"></div>
       <div style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.02em;padding:8px 2px 14px">내정보</div>
@@ -1382,7 +1386,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.35";
+const CUST_APP_VERSION = "5.9.36";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -1644,8 +1648,17 @@ async function loadCustHomeAd(){
       }
     });
   }catch(e){}
-  // 랜덤 셔플 (공정 노출)
-  for(var i=brandAds.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=brandAds[i];brandAds[i]=brandAds[j];brandAds[j]=t; }
+  // ★ 균등 노출: 이번 달 노출(노트+멤버스 합산)이 적은 광고부터 (동률 랜덤)
+  //   → 월정액 광고들이 서로 비슷한 횟수로 수렴 (공정 배분)
+  try{
+    var _ym=new Date().toISOString().slice(0,7);
+    var {data:_cnts}=await sbRead.from("ad_impressions_monthly").select("ad_key,cnt").eq("ym",_ym);
+    var _sum={}; (_cnts||[]).forEach(function(r){ _sum[r.ad_key]=(_sum[r.ad_key]||0)+(r.cnt||0); });
+    brandAds.forEach(function(a){ a._key=(a._type==="startup"?"startup:":"brandad:")+a.id; a._imp=_sum[a._key]||0; a._rnd=Math.random(); });
+    brandAds.sort(function(x,y){ return (x._imp-y._imp)||(x._rnd-y._rnd); });
+  }catch(e){
+    for(var i=brandAds.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=brandAds[i];brandAds[i]=brandAds[j];brandAds[j]=t; }
+  }
   _adBrandList=brandAds;
   _renderAdSection("brand");
   if(_adBrandList.length>1){
@@ -1669,19 +1682,29 @@ function _adCardInner(a, gi){
     '<div style="font-size:15px;font-weight:800">'+esc(a.title||"브랜드 소식")+'</div>'+
     (a.sub?'<div style="font-size:12.5px;margin-top:5px;opacity:.92">'+esc(a.sub)+'</div>':'')+'</div>';
 }
+// 노출 1회 기록 (렌더 1번 = 1회, 백그라운드 스킵) — 균등 배분·지원팀 통계의 근거
+function _recordAdImp(a){
+  try{
+    if(document.hidden || !a) return;
+    var key=(a._type==="startup"?"startup:":"brandad:")+a.id;
+    sbRead.from("ad_impressions").insert({ ad_key:key, ad_title:a.title||"", app:"members" }).then(function(){});
+  }catch(e){}
+}
 function _renderAdSection(group){
-  var host=document.getElementById("home-ad-brand");
   var list=_adBrandList, idx=_adBrandIdx;
-  if(!host) return;
-  if(!list.length){ host.innerHTML=""; return; }
+  var hosts=["home-ad-brand","mad-stamp","mad-benefit","mad-me"].map(function(id){ return document.getElementById(id); }).filter(Boolean);
+  if(!hosts.length) return;
+  if(!list.length){ hosts.forEach(function(h){ h.innerHTML=""; }); return; }
   var a=list[idx];
   var dots=list.length>1
     ? '<div style="display:flex;gap:5px;justify-content:center;margin-top:8px">'+
       list.map(function(_,i){ return '<span style="width:6px;height:6px;border-radius:50%;background:'+(i===idx?'var(--primary)':'#d1d5db')+'"></span>'; }).join("")+'</div>'
     : '';
-  host.innerHTML=
+  var html=
     '<div class="home-adtag"><span class="lb">'+esc(a.tag||"소식")+'</span><span class="ad">광고</span></div>'+
     _adCardInner(a, "brand")+dots;
+  hosts.forEach(function(h){ h.innerHTML=html; });   // 모든 탭 상단에 동일 광고
+  _recordAdImp(a);
 }
 function clickAdSection(group){
   try{
