@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.24";
+const CUST_APP_VERSION = "5.9.25";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -1906,7 +1906,18 @@ function getStore(){
   try{
     var sp=new URLSearchParams(location.search); var c=sp.get("store");
     if(!c && location.hash){ var hp=new URLSearchParams(location.hash.replace(/^#/,"")); c=hp.get("store"); }
-    return c?c.trim():"";
+    if(c){
+      c=c.trim();
+      // 공유·QR로 들어온 매장을 기억 → 나중에 설치된 앱을 그냥 열어도 이 매장이 보이게
+      try{
+        localStorage.setItem("bm_last_store", c);
+        if(sp.get("ad")==="1") localStorage.setItem("bm_last_ad","1");
+      }catch(e){}
+      return c;
+    }
+    // 파라미터 없이 열림(설치 앱 아이콘 실행 등) → 마지막 공유/QR 매장 복원
+    try{ var saved=localStorage.getItem("bm_last_store"); if(saved) return saved; }catch(e){}
+    return "";
   }catch(e){ return ""; }
 }
 // 직원 초대 코드 (?join=코드)
@@ -2570,12 +2581,15 @@ function _shouldGateInstall(){
   // 이 폰에 이미 설치한 기록이 있으면(다른 매장에서 설치·로그인 완료) 재설치 강요하지 않음
   // → QR을 일반 카메라로 찍어 브라우저로 열려도 바로 적립 가능
   try{ if(localStorage.getItem("blnk_cust_pwa_installed")==="1") return false; }catch(e){}
-  var isDemo=false, isPeek=false, isWork=false;
+  var isDemo=false, isPeek=false, isWork=false, isStoreLink=false;
   try{ isDemo=(new URLSearchParams(location.search).get("demo")==="1"); }catch(e){}
   try{ isPeek=!!new URLSearchParams(location.search).get("peek"); }catch(e){}
   // QR 출퇴근으로 온 직원은 설치 게이트 면제 (아이폰은 QR=브라우저로 열려서 설치앱이 아님)
   try{ isWork=(new URLSearchParams(location.search).get("mode")==="work"); }catch(e){}
-  if(isDemo || isPeek || isWork) return false;
+  // ★ 카톡 공유·매장 QR(?store=)로 온 손님도 면제 — 설치 없이 바로 소식·가입·적립.
+  //   (아이폰 카톡 인앱은 설치 자체가 불가능해서, 막으면 손님이 길을 잃음. 설치 유도는 하단 배너가 담당)
+  try{ isStoreLink=!!new URLSearchParams(location.search).get("store"); }catch(e){}
+  if(isDemo || isPeek || isWork || isStoreLink) return false;
   return true;
 }
 function showInstallGate(){
@@ -3766,6 +3780,10 @@ async function enterMain(){
   // 공유 링크(?ad=1)로 들어오면 이벤트를 펼쳐서 크게 보여줌 (사진+내용+신청)
   try{
     var _adParam=new URLSearchParams(location.search).get("ad");
+    // 링크로 못 받았어도, 직전에 공유 링크로 들어왔던 기록이 있으면 1회 펼침 (설치 앱에서 이어보기)
+    if(_adParam!=="1"){
+      try{ if(localStorage.getItem("bm_last_ad")==="1"){ _adParam="1"; localStorage.removeItem("bm_last_ad"); } }catch(e){}
+    } else { try{ localStorage.removeItem("bm_last_ad"); }catch(e){} }
     if(_adParam==="1" && STORE_CODE){ _newsSetClosed(STORE_CODE,false); }   // 공유로 온 손님에겐 소식 다시 펼침
     if(_adParam==="1" && _storeEvent){
       _evExpanded=true; renderStoreEventBanner();
