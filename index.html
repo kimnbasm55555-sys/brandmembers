@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.29";
+const CUST_APP_VERSION = "5.9.30";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -3798,6 +3798,19 @@ async function enterMain(){
   if(!brandCode && STORE_CODE){
     try{ var sr=await sbRead.from("stores").select("brand").eq("store_code",STORE_CODE).maybeSingle(); if(sr.data&&sr.data.brand) brandCode=sr.data.brand; }catch(e){}
   }
+  // ── 아이폰 대응: 설치 앱을 아이콘으로 열어 매장 파라미터가 없을 때,
+  //   서버에서 이 손님의 '최근 이용 매장'을 찾아 복원 (localStorage 분리와 무관하게 동작) ──
+  if(!DEMO_MODE && !PEEK_MODE && !STORE_CODE && CUST && CUST.phone_hash){
+    try{
+      var _recent=await _findRecentStore(CUST.phone_hash);
+      if(_recent){
+        STORE_CODE=_recent;
+        STORE_NAME=await loadStoreName(STORE_CODE);
+        // 이 매장 소식을 한 번 펼쳐 보여줌 (카톡에서 본 그 매장을 이어서)
+        try{ _newsSetClosed(STORE_CODE,false); }catch(e){}
+      }
+    }catch(e){}
+  }
   await _applyBrandHeader(brandCode);
   await loadStoreEvent();   // 우리 매장 이벤트 배너 (사장님 등록)
   // 공유 링크(?ad=1)로 들어오면 이벤트를 펼쳐서 크게 보여줌 (사진+내용+신청)
@@ -3823,6 +3836,23 @@ async function enterMain(){
   }catch(e){}
   await refreshStamps(); await refreshCoupons();
   startStampRealtime();   // 매장 승인 → 손님 화면 즉시 반영
+}
+
+// 이 손님이 최근 이용한 매장 찾기 — 스탬프 > 쿠폰 순으로 가장 최근 store_code
+// (아이폰 설치 앱은 localStorage가 분리되므로 서버 데이터로 매장을 복원해야 함)
+async function _findRecentStore(ph){
+  if(!ph) return "";
+  try{
+    var {data:st}=await sb.from("stamps").select("store_code,created_at").eq("phone_hash",ph).order("created_at",{ascending:false}).limit(1);
+    if(st && st.length && st[0].store_code) return st[0].store_code;
+  }catch(e){}
+  try{
+    var {data:cp}=await sb.from("coupons").select("store_code,created_at").eq("phone_hash",ph).order("created_at",{ascending:false}).limit(1);
+    if(cp && cp.length && cp[0].store_code) return cp[0].store_code;
+  }catch(e){}
+  // 가입 매장(join_store)이 있으면 그것
+  try{ if(CUST && CUST.join_store) return CUST.join_store; }catch(e){}
+  return "";
 }
 
 // ── 매장 이벤트 배너 (사장님이 브랜드노트에서 등록한 이벤트) ──
