@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.30";
+const CUST_APP_VERSION = "5.9.31";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -2520,7 +2520,7 @@ function custInappClose(){
   document.body.style.paddingTop="";
 }
 function initCustInappGuide(){
-  try{ if(_pwaIsInstalled()) return; }catch(e){}   // 지금 창이 설치앱이면 안내 불필요
+  try{ if(_pwaLikelyInstalled()) return; }catch(e){}   // 이미 설치돼 있으면(안드로이드 기록 포함) 안내 불필요
   // 직원 초대(?join=)로 들어온 사람은 '설치 의무' → 닫기 없이 항상 안내를 띄운다.
   var _isJoin=false; try{ _isJoin=!!getJoinCode(); }catch(e){}
   if(!_isJoin){
@@ -2570,13 +2570,29 @@ function initCustInappGuide(){
 window.addEventListener("DOMContentLoaded", function(){ setTimeout(function(){ try{ initCustInappGuide(); }catch(e){} }, 1400); });
 
 function _pwaIsInstalled(){
-  // '지금 이 창'이 설치된 앱(홈 화면 아이콘)으로 열렸는지만 본다.
-  // (예전 '설치함' 기록에 의존하지 않음 — 앱을 지운 손님에게도 다시 권유가 뜨도록)
-  return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
+  // '지금 이 창'이 설치된 앱(홈 화면 아이콘)으로 열렸는지 본다.
+  var standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
+  // 설치앱으로 열렸고 안드로이드면 '설치함' 기록을 남긴다 → 이후 카톡 브라우저(저장소 공유)에서도
+  //   설치 여부를 알 수 있어 "앱으로 열기/설치" 안내를 억제. (아이폰은 저장소 분리라 기록해도 무의미)
+  if(standalone){ try{ if(/android/.test((navigator.userAgent||"").toLowerCase())) localStorage.setItem("blnk_cust_pwa_installed","1"); }catch(e){} }
+  return standalone;
 }
 function _pwaIsIos(){
   var ua=window.navigator.userAgent.toLowerCase();
   return /iphone|ipad|ipod/.test(ua);
+}
+function _pwaIsAndroid(){
+  return /android/.test((window.navigator.userAgent||"").toLowerCase());
+}
+// '설치된 것으로 볼 수 있나' — 지금 창이 설치앱이거나, (안드로이드 한정) 설치 기록이 있으면 true.
+// 안드로이드는 카톡 브라우저와 설치앱이 저장소를 공유하므로 기록을 신뢰할 수 있다.
+// 아이폰은 저장소가 분리돼 기록이 안 넘어오므로 기록을 신뢰하지 않는다(standalone만 본다).
+function _pwaLikelyInstalled(){
+  if(_pwaIsInstalled()) return true;
+  if(_pwaIsAndroid()){
+    try{ if(localStorage.getItem("blnk_cust_pwa_installed")==="1") return true; }catch(e){}
+  }
+  return false;
 }
 
 // ══════════ 앱 설치 의무 게이트 ══════════
@@ -2678,7 +2694,7 @@ window.addEventListener("appinstalled",function(){
   }
 });
 function _pwaMaybeShowBanner(){
-  if(_pwaIsInstalled()) return;                              // 이미 설치앱이면 숨김
+  if(_pwaLikelyInstalled()) return;                          // 이미 설치돼 있으면(안드로이드 기록 포함) 숨김
   if(typeof DEMO_MODE!=="undefined" && DEMO_MODE) return;    // 데모는 숨김
   if(typeof PEEK_MODE!=="undefined" && PEEK_MODE) return;    // 사장님 미리보기 숨김
   // 카톡 등 인앱 브라우저에서는 상단 '앱으로 열기' 안내가 담당하므로 하단 배너 중복 표시 안 함
@@ -2690,11 +2706,16 @@ function _pwaMaybeShowBanner(){
   var banner=$("pwaBanner"); if(banner) banner.style.display="flex";
 }
 function pwaInstall(){
-  if(_pwaIsIos()){ pwaOpenIos(); return; }
+  if(_pwaIsIos()){ pwaOpenIos(); return; }   // 진짜 아이폰만 아이폰 안내
   if(_pwaDeferredPrompt){
     _pwaDeferredPrompt.prompt();
     _pwaDeferredPrompt.userChoice.then(function(){ _pwaDeferredPrompt=null; var b=$("pwaBanner"); if(b) b.style.display="none"; });
-  }else{ pwaOpenIos(); }
+  }else if(_pwaIsAndroid()){
+    // 안드로이드인데 프롬프트가 아직/이미 없음 → 아이폰 안내(X) 대신 크롬 수동 설치 안내
+    toast("브라우저 메뉴(⋮)에서 '앱 설치' 또는 '홈 화면에 추가'를 눌러주세요");
+  }else{
+    pwaOpenIos();   // 데스크톱 등
+  }
 }
 function pwaDismissBanner(){
   var b=$("pwaBanner"); if(b) b.style.display="none";
@@ -2703,9 +2724,10 @@ function pwaDismissBanner(){
 function pwaOpenIos(){ var m=$("pwaIosModal"); if(m) m.style.display="flex"; }
 function pwaCloseIos(){ var m=$("pwaIosModal"); if(m) m.style.display="none"; }
 function pwaOpenInstall(){
-  if(_pwaIsInstalled()){ toast("이미 앱으로 설치되어 있습니다"); return; }
+  if(_pwaLikelyInstalled()){ toast("이미 앱으로 설치되어 있습니다"); return; }
   if(_pwaIsIos()){ pwaOpenIos(); return; }
   if(_pwaDeferredPrompt){ pwaInstall(); return; }
+  if(_pwaIsAndroid()){ toast("브라우저 메뉴(⋮)에서 '앱 설치' 또는 '홈 화면에 추가'를 눌러주세요"); return; }
   pwaOpenIos();
 }
 // 로드 후 배너/설치안내 판단
@@ -6114,7 +6136,7 @@ function keepBannerInstall(){
 }
 // n개 혜택 요약을 받아 배너 HTML 반환 ("" 면 표시 안 함)
 function _keepInstallBarHtml(summary){
-  try{ if(_pwaIsInstalled && _pwaIsInstalled()) return ""; }catch(e){}
+  try{ if(_pwaLikelyInstalled && _pwaLikelyInstalled()) return ""; }catch(e){}
   if(_keepBannerClosed()) return "";
   var line = summary || "내 쿠폰·스탬프";
   return "<div id='keepInstallBar' style='display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#eef3ff,#f5f0ff);border:1px solid #dbe4ff;border-radius:14px;padding:12px 13px;margin-bottom:13px'>"
