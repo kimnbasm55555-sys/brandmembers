@@ -1085,7 +1085,7 @@
     </div>
     <div class="hd-txt">
       <div class="hd-label" id="hdLabel">스탬프 적립</div>
-      <div class="hd-store" id="hdBrand">스탬프</div>
+      <div class="hd-store" id="hdBrand">혜택</div>
     </div>
     <button class="hd-my" id="hdMyBtn" onclick="openMyPage()" aria-label="마이페이지">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -1243,7 +1243,7 @@
   <!-- 고객 하단 탭바 -->
   <nav class="cust-tabbar" id="custTabbar">
     <button class="ctab on" data-ct="home" onclick="custTab('home')"><svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>홈</span></button>
-    <button class="ctab" data-ct="stamp" onclick="custTab('stamp')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg><span>스탬프</span></button>
+    <button class="ctab" data-ct="stamp" onclick="custTab('stamp')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg><span>혜택</span></button>
     <button class="ctab" data-ct="benefit" onclick="custTab('benefit')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5.5-5.5 2 2-5.5z"/></svg><span>착한창업</span></button>
     <button class="ctab" data-ct="me" onclick="custTab('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg><span>내정보</span></button>
   </nav>
@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.21";
+const CUST_APP_VERSION = "5.9.22";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -2925,6 +2925,7 @@ function renderCustHome(){
 var _scEvByBrand=null;      // {brand: [ext_ad_banner...]} 캐시
 var _scCpnByStore=null;     // {store_code: 유효쿠폰수}
 var _scStoreBrand={};       // {store_code: brand}
+var _scStoreAd={};          // {store_code: stores행} — 매장 소식(사진·유튜브·이벤트)
 var _scLoadedOnce=false;
 
 // 매장 0개일 때 보여주는 예시 카드 5개 (영상/이미지/글자 조합 다양하게)
@@ -3058,6 +3059,66 @@ async function renderStoreCards(){
   // 첫 카드는 자동으로 펼쳐서 보여주기
   try{ if(items.length){ var first=document.getElementById("sccard-"+items[0].s.code); if(first) first.classList.add("open"); } }catch(e){}
 }
+// ══════ 매장 소식 (사장님이 '카톡 바이럴 홍보'에서 등록한 사진·유튜브·이벤트) ══════
+function _newsClosed(code){ try{ return localStorage.getItem("bm_news_closed_"+code)==="1"; }catch(e){ return false; } }
+function _newsSetClosed(code,v){ try{ if(v) localStorage.setItem("bm_news_closed_"+code,"1"); else localStorage.removeItem("bm_news_closed_"+code); }catch(e){} }
+function newsToggle(code, evt){
+  try{ if(evt) evt.stopPropagation(); }catch(e){}
+  _newsSetClosed(code, !_newsClosed(code));
+  try{ renderStoreCards(); }catch(e){}
+  try{ renderStoreStamps(); }catch(e){}
+}
+// 매장 소식 카드 HTML — 내용 없으면 "" 반환
+function _storeNewsHtml(code){
+  var d=_scStoreAd&&_scStoreAd[code]; if(!d) return "";
+  // 이벤트는 기간 내일 때만
+  var evOn=false, dday="";
+  if(d.event_title){
+    try{
+      var today=new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:"Asia/Seoul"}).format(new Date());
+      if((!d.event_start||today>=d.event_start) && (!d.event_end||today<=d.event_end)){
+        evOn=true;
+        if(d.event_end){
+          var diff=Math.floor((new Date(d.event_end+"T23:59:59")-new Date())/86400000);
+          if(diff===0) dday="오늘 마감"; else if(diff>0) dday="D-"+diff;
+        }
+      }
+    }catch(e){}
+  }
+  var ytId = d.ad_youtube_url ? (typeof _ytId==='function'?_ytId(d.ad_youtube_url):"") : "";
+  var img = d.ad_image_url||"";
+  if(!evOn && !ytId && !img) return "";   // 보여줄 소식이 없음
+
+  var summary = evOn ? d.event_title : (ytId ? "영상 소식" : "사진 소식");
+  if(_newsClosed(code)){
+    // 접힌 한 줄 — 탭하면 다시 펼쳐짐
+    return "<div style='display:flex;align-items:center;gap:8px;background:var(--brand-soft,#eef4ff);border:1px solid #dbe7ff;border-radius:12px;padding:10px 13px;margin-bottom:10px;cursor:pointer' onclick=\"newsToggle('"+esc(code)+"',event)\">"
+      + "<span style='font-size:14px'>📣</span>"
+      + "<span style='flex:1;font-size:12.5px;font-weight:700;color:var(--brand-dark,#1d4ed8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>매장 소식 · "+esc(summary)+"</span>"
+      + "<span style='font-size:11px;color:var(--text3,#9aa3af)'>펼치기 ▾</span>"
+      + "</div>";
+  }
+  var h="<div style='background:#fff;border:1px solid var(--line,#e8ebef);border-radius:14px;padding:13px;margin-bottom:10px' onclick='event.stopPropagation()'>"
+    + "<div style='display:flex;align-items:center;margin-bottom:9px'>"
+    +   "<span style='font-size:12px;font-weight:800;color:var(--brand-dark,#1d4ed8);background:var(--brand-soft,#eef4ff);border-radius:7px;padding:3px 9px'>📣 매장 소식</span>"
+    +   (dday?"<span style='font-size:10.5px;font-weight:800;color:#fff;background:#ff6b35;border-radius:6px;padding:2px 7px;margin-left:6px'>"+esc(dday)+"</span>":"")
+    +   "<span style='flex:1'></span>"
+    +   "<span style='font-size:11px;color:var(--text3,#9aa3af);cursor:pointer;padding:4px' onclick=\"newsToggle('"+esc(code)+"',event)\">접기 ▴</span>"
+    + "</div>";
+  if(ytId){
+    h+="<div class='sc-ev' data-yt='"+esc(ytId)+"' onclick=\"scPlayYt(this)\" style='margin-bottom:8px'>"
+      + "<img src='https://i.ytimg.com/vi/"+esc(ytId)+"/hqdefault.jpg' alt=''>"
+      + "<div class='sc-ev-play'><div class='pl'>▶</div></div></div>";
+  }
+  if(img){ h+="<img src='"+esc(img)+"' alt='' style='width:100%;border-radius:10px;display:block;margin-bottom:8px'>"; }
+  if(evOn){
+    h+="<div style='font-size:14px;font-weight:800;letter-spacing:-.01em'>"+esc(d.event_title)+"</div>";
+    if(d.event_body){ h+="<div style='font-size:12.5px;color:var(--sub,#556);margin-top:4px;line-height:1.55;white-space:pre-line'>"+esc(d.event_body)+"</div>"; }
+  }
+  h+="</div>";
+  return h;
+}
+
 // 매장 카드 아코디언 토글 (한 번에 하나만 펼침)
 function scToggleCard(code){
   var el=document.getElementById("sccard-"+code);
@@ -3077,8 +3138,11 @@ async function _scEnsureData(){
   try{
     var codes=(_storeData||[]).map(function(s){return s.code;}).filter(Boolean);
     if(codes.length){
-      var {data:sts}=await sbRead.from("stores").select("store_code,brand").in("store_code",codes);
-      (sts||[]).forEach(function(s){ if(s.brand) _scStoreBrand[s.store_code]=s.brand; });
+      var {data:sts}=await sbRead.from("stores").select("store_code,brand,ad_image_url,ad_youtube_url,event_title,event_body,event_start,event_end").in("store_code",codes);
+      (sts||[]).forEach(function(s){
+        if(s.brand) _scStoreBrand[s.store_code]=s.brand;
+        _scStoreAd[s.store_code]=s;   // 매장 소식(사진·유튜브·이벤트) 데이터
+      });
     }
     var brands=Object.keys(_scStoreBrand).reduce(function(a,k){ var b=_scStoreBrand[k]; if(b&&a.indexOf(b)<0)a.push(b); return a; },[]);
     _scEvByBrand={};
@@ -3203,7 +3267,7 @@ function _scCardHtml(it,goal,idx){
     +   thumbHtml
     +   "<span class='sc-carr'>›</span>"
     + "</div>"
-    + "<div class='sc-cbody'>"+evHtml+stHtml+cpnHtml+"</div>"
+    + "<div class='sc-cbody'>"+_storeNewsHtml(s.code)+evHtml+stHtml+cpnHtml+"</div>"
     + "</div>";
 }
 
@@ -3781,6 +3845,7 @@ async function enterMain(){
   // 공유 링크(?ad=1)로 들어오면 이벤트를 펼쳐서 크게 보여줌 (사진+내용+신청)
   try{
     var _adParam=new URLSearchParams(location.search).get("ad");
+    if(_adParam==="1" && STORE_CODE){ _newsSetClosed(STORE_CODE,false); }   // 공유로 온 손님에겐 소식 다시 펼침
     if(_adParam==="1" && _storeEvent){
       _evExpanded=true; renderStoreEventBanner();
       setTimeout(function(){ var b=$("storeEventBanner"); if(b) b.scrollIntoView({behavior:"smooth",block:"start"}); },200);
@@ -5906,6 +5971,12 @@ var _selectedStore=null;   // 현재 선택된 매장 코드
 function renderStoreStamps(){
   var wrap=$("storeStamps"); wrap.innerHTML="";
   try{ renderClosingNotice(); }catch(e){}
+  // 매장 소식 데이터가 아직 없으면 백그라운드 로드 후 한 번 다시 그림
+  try{
+    if(!_scLoadedOnce && _storeData.length){
+      _scEnsureData().then(function(){ try{ renderStoreStamps(); }catch(e){} });
+    }
+  }catch(e){}
   if(!_storeData.length){
     wrap.innerHTML="<div class='card'><div class='empty'>아직 적립한 매장이 없어요. 매장 QR을 찍어 적립을 시작하세요.</div></div>";
     return;
@@ -5959,6 +6030,7 @@ function renderStoreStamps(){
 
   wrap.innerHTML=
     chipsHtml+
+    _storeNewsHtml(s.code)+
     "<div class='card'>"+
       "<div class='store-head'>"+
         "<div class='store-name'><svg class='pin' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'/><circle cx='12' cy='10' r='3'/></svg>"+esc(s.name)+(isHere?" <span class='store-badge'>지금 이 매장</span>":"")+"</div>"+
