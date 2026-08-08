@@ -1385,7 +1385,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.39";
+const CUST_APP_VERSION = "5.9.40";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 // 카톡 등 인앱 브라우저는 타 도메인 iframe(착한창업)을 차단 → 안내 화면 HTML 반환 (아니면 "")
@@ -3135,18 +3135,28 @@ function _storeNewsHtml(code){
   var h="<div style='background:#fff;border:1px solid var(--line,#e8ebef);border-left:4px solid "+_mColor+";border-radius:12px;padding:13px;margin-bottom:10px' onclick='event.stopPropagation()'>"
     + "<div style='display:flex;align-items:center;margin-bottom:9px'>"
     +   "<span style='font-size:12px;font-weight:800;color:#fff;background:"+_mColor+";border-radius:7px;padding:3px 9px'>📣 매장 소식</span>"
-    +   (dday?"<span style='font-size:10.5px;font-weight:800;color:#fff;background:#ff6b35;border-radius:6px;padding:2px 7px;margin-left:6px'>"+esc(dday)+"</span>":"")
     +   "<span style='flex:1'></span>"
     +   "<span style='font-size:11px;color:var(--text3,#9aa3af);cursor:pointer;padding:4px' onclick=\"newsToggle('"+esc(code)+"',event)\">접기 ▴</span>"
     + "</div>";
+  // 영상: 썸네일만 작게(가로 60%), ▶ 탭하면 그 자리에서 재생
   if(ytId){
-    h+="<div class='sc-ev' data-yt='"+esc(ytId)+"' onclick=\"scPlayYt(this)\" style='margin-bottom:8px'>"
-      + "<img src='https://i.ytimg.com/vi/"+esc(ytId)+"/hqdefault.jpg' alt=''>"
-      + "<div class='sc-ev-play'><div class='pl'>▶</div></div></div>";
+    h+="<div style='max-width:230px;margin:0 auto 9px'><div class='sc-ev' data-yt='"+esc(ytId)+"' onclick=\"scPlayYt(this)\" style='margin-bottom:0'>"
+      + "<img src='https://i.ytimg.com/vi/"+esc(ytId)+"/hqdefault.jpg' alt='' onerror=\"this.src='https://i.ytimg.com/vi/"+esc(ytId)+"/mqdefault.jpg'\">"
+      + "<div class='sc-ev-play'><div class='pl'>▶</div></div></div></div>";
   }
-  if(img){ h+="<img src='"+esc(img)+"' alt='' style='width:100%;border-radius:10px;display:block;margin-bottom:8px'>"; }
+  // 사진: 작게(가로 60%), 탭하면 전체화면 확대
+  if(img){
+    h+="<div style='max-width:230px;margin:0 auto 9px'><div class='sc-img' onclick=\"scImgZoom('"+esc(img)+"')\">"
+      + "<img src='"+esc(img)+"' alt=''>"
+      + "<div style='position:absolute;right:7px;bottom:7px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px'>🔍 크게</div>"
+      + "</div></div>";
+  }
   if(evOn){
-    h+="<div style='font-size:14px;font-weight:800;letter-spacing:-.01em'>"+esc(d.event_title)+"</div>";
+    // 제목 + D-day (제목 오른쪽)
+    h+="<div style='display:flex;align-items:center;gap:7px'>"
+      + "<span style='font-size:14px;font-weight:800;letter-spacing:-.01em'>"+esc(d.event_title)+"</span>"
+      + (dday?"<span style='font-size:10.5px;font-weight:800;color:#fff;background:#ff6b35;border-radius:6px;padding:2px 7px'>"+esc(dday)+"</span>":"")
+      + "</div>";
     if(d.event_body){ h+="<div style='font-size:12.5px;color:var(--sub,#556);margin-top:4px;line-height:1.55;white-space:pre-line'>"+esc(d.event_body)+"</div>"; }
     if(d.event_gift){ h+="<div style='background:var(--brand-soft,#eef4ff);border-radius:9px;padding:9px 12px;margin-top:8px;font-size:12.5px'>🎁 이벤트 선물 · <b>"+esc(d.event_gift)+"</b> <span style='color:var(--sub2,#8a929c);font-size:11.5px'>— 매장에서 직원에게 보여주세요</span></div>"; }
     if(d.event_viral){
@@ -3334,10 +3344,33 @@ function _scColorFor(code){
   return pal[h%pal.length];
 }
 // 유튜브 인라인 재생 (썸네일 → iframe)
+// 유튜브 URL에서 영상 ID 추출 (shorts / watch?v= / youtu.be / embed 모두 지원)
+function _ytId(url){
+  if(!url) return "";
+  try{
+    var m = url.match(/(?:shorts\/|watch\?v=|youtu\.be\/|embed\/|v=)([A-Za-z0-9_-]{11})/);
+    if(m && m[1]) return m[1];
+    // 순수 11자리 ID만 들어온 경우
+    if(/^[A-Za-z0-9_-]{11}$/.test(url.trim())) return url.trim();
+  }catch(e){}
+  return "";
+}
 function scPlayYt(el){
   var id=el.getAttribute("data-yt"); if(!id) return;
   el.innerHTML="<iframe src='https://www.youtube.com/embed/"+id+"?autoplay=1&playsinline=1' allow='autoplay' allowfullscreen></iframe>";
   el.onclick=null;
+}
+// 사진 탭 → 전체화면 확대 (핀치 줌 가능한 라이트박스)
+function scImgZoom(url){
+  if(!url) return;
+  var old=document.getElementById("imgZoomModal"); if(old) old.remove();
+  var w=document.createElement("div");
+  w.id="imgZoomModal";
+  w.style.cssText="position:fixed;inset:0;z-index:100010;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:12px";
+  w.onclick=function(){ w.remove(); };
+  w.innerHTML="<img src='"+url+"' style='max-width:100%;max-height:100%;object-fit:contain;border-radius:6px'>"
+    + "<div style='position:absolute;top:16px;right:18px;color:#fff;font-size:26px;cursor:pointer'>✕</div>";
+  document.body.appendChild(w);
 }
 // 이미지/텍스트 이벤트 클릭 → 클릭수 +1 & 링크
 function scClickEv(id,link){
