@@ -1105,9 +1105,6 @@
       <!-- 홈 제목·인사말 -->
       <div id="custHomeTop"></div>
 
-      <!-- 매장 이벤트 배너: 매장 카드 안 '매장 소식'으로 통합됨 → 최상단 중복 제거 (항상 숨김) -->
-      <div id="storeEventBanner" style="display:none !important"></div>
-
       <!-- 폐점 안내 배너 (점주가 탈퇴 시 등록) -->
       <div id="closingNoticeBanner" style="display:none"></div>
 
@@ -1158,8 +1155,6 @@
     <!-- ===== 내정보 탭 ===== -->
     <div class="cust-page" id="cpage-me">
       <div id="mad-me" class="home-sec"></div>
-      <!-- 상단 프리미엄 배너 -->
-      <div id="me-top-banner" style="margin:16px 0 14px"></div>
       <div style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.02em;padding:8px 2px 14px">내정보</div>
 
       <!-- 프로필 카드 -->
@@ -1171,10 +1166,14 @@
         </div>
       </div>
 
-      <!-- 가입매장 현황 (매장 있을 때만 표시) -->
-      <div id="me-stores-sec" style="display:none">
-        <div class="me-sec">내 단골 매장</div>
-        <div class="me-card" id="me-stores"></div>
+      <!-- 단골매장 관리 (누르면 매장별 스탬프·쿠폰·탈퇴) -->
+      <div id="me-stores-sec" class="me-card" style="display:none;margin-top:6px">
+        <div class="me-item" onclick="openMyStores()">
+          <span style="font-size:16px;margin-right:9px">🏪</span>
+          <span style="font-size:14.5px;font-weight:600">단골매장 관리</span>
+          <span id="me-stores-cnt" style="font-size:12px;color:var(--text3);margin-left:auto;margin-right:6px"></span>
+          <span style="color:#c4cad2">›</span>
+        </div>
       </div>
 
       <!-- 찜한 브랜드 (메뉴 한 줄 → 누르면 목록) -->
@@ -1386,7 +1385,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.36";
+const CUST_APP_VERSION = "5.9.37";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -1696,10 +1695,7 @@ function _renderAdSection(group){
   if(!hosts.length) return;
   if(!list.length){ hosts.forEach(function(h){ h.innerHTML=""; }); return; }
   var a=list[idx];
-  var dots=list.length>1
-    ? '<div style="display:flex;gap:5px;justify-content:center;margin-top:8px">'+
-      list.map(function(_,i){ return '<span style="width:6px;height:6px;border-radius:50%;background:'+(i===idx?'var(--primary)':'#d1d5db')+'"></span>'; }).join("")+'</div>'
-    : '';
+  var dots="";   // 광고가 많아지면 점을 다 표시할 수 없어 제거 (랜덤 롤링만)
   var html=
     '<div class="home-adtag"><span class="lb">'+esc(a.tag||"소식")+'</span><span class="ad">광고</span></div>'+
     _adCardInner(a, "brand")+dots;
@@ -2868,7 +2864,6 @@ function renderCustMe(){
     var mkEl=$("myMkt"); if(mkEl && CUST) mkEl.checked=!!CUST.marketing_ok;
   }catch(e){}
   // 상단 배너 (홈과 동일 소스)
-  try{ _loadMeBanner(); }catch(e){}
   // 가입매장 현황
   try{ _renderMeStores(); }catch(e){}
   // 찜한 브랜드
@@ -2947,26 +2942,38 @@ async function _loadMeBanner(){
 }
 // 가입매장 현황 목록 (단골매장 + 개별 탈퇴)
 function _renderMeStores(){
-  var host=$("me-stores"); if(!host) return;
-  var sec=$("me-stores-sec");
-  var list=(_storeData||[]);
-  if(!list.length){
-    if(sec) sec.style.display="none";   // 매장 없으면 섹션 통째로 숨김
-    return;
-  }
-  if(sec) sec.style.display="block";
-  host.innerHTML=list.map(function(s){
-    var goal=goalFor(s.code);
-    var initial=(s.name||"매").trim().charAt(0);
-    var color=(typeof _scColorFor==='function')?_scColorFor(s.code):"#3b4cca";
-    var bal=(s.balance||0)%goal;
-    return "<div class='me-store'>"
-      + "<div class='me-slogo' style='background:"+color+"'>"+esc(initial)+"</div>"
-      + "<div class='me-smid'><div class='me-snm'>"+esc(s.name)+"</div>"
-      +   "<div class='me-sinfo'>스탬프 "+bal+"/"+goal+"</div></div>"
-      + "<button class='me-sleave' onclick=\"leaveStore('"+esc(s.code)+"','"+esc(s.name).replace(/'/g,"")+"')\">탈퇴</button>"
+  // '단골매장 관리' 행: 매장이 1곳 이상이면 표시 + 개수 뱃지
+  var sec=$("me-stores-sec"); if(!sec) return;
+  var n=(_storeData||[]).length;
+  sec.style.display = n>0 ? "block" : "none";
+  var c=$("me-stores-cnt"); if(c) c.textContent = n>0 ? (n+"곳") : "";
+}
+// 단골매장 관리 모달: 매장별 스탬프·쿠폰 현황 + 탈퇴
+function openMyStores(){
+  var old=document.getElementById("myStoresModal"); if(old) old.remove();
+  var list=_storeData||[];
+  var items = list.length ? list.map(function(s){
+    var col=(typeof _scColorFor==="function")?_scColorFor(s.code):"#3b4cca";
+    return "<div style='display:flex;align-items:center;gap:11px;background:#f8f9fc;border-left:4px solid "+col+";border-radius:12px;padding:13px;margin-bottom:9px'>"
+      + "<div style='flex:1;min-width:0'>"
+      +   "<div style='font-size:14px;font-weight:800'>"+esc(s.name||s.code)+"</div>"
+      +   "<div style='font-size:12px;color:var(--sub,#667085);margin-top:3px'>스탬프 <b style='color:"+col+"'>"+(s.balance||0)+"</b>/"+(s.goal||goalFor(s.code))+" · 쿠폰 <b style='color:"+col+"'>"+(s.cpn||0)+"</b>장</div>"
+      + "</div>"
+      + "<button onclick=\"leaveStore('"+esc(s.code)+"','"+esc(s.name||s.code)+"')\" style='flex-shrink:0;padding:8px 13px;border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:9px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer'>탈퇴</button>"
       + "</div>";
-  }).join("");
+  }).join("") : "<div style='text-align:center;color:var(--sub);padding:24px 0;font-size:13px'>아직 단골 매장이 없어요</div>";
+  var w=document.createElement("div");
+  w.id="myStoresModal";
+  w.style.cssText="position:fixed;inset:0;z-index:100005;background:rgba(15,18,30,.55);display:flex;align-items:center;justify-content:center;padding:20px";
+  w.onclick=function(ev){ if(ev.target===w) w.remove(); };
+  w.innerHTML="<div style='background:#fff;border-radius:18px;padding:20px;max-width:340px;width:100%;max-height:75vh;overflow:auto'>"
+    + "<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:4px'>"
+    +   "<div style='font-size:16px;font-weight:900'>🏪 단골매장 관리</div>"
+    +   "<button onclick=\"document.getElementById('myStoresModal').remove()\" style='background:none;border:none;font-size:20px;color:#9ca3af;cursor:pointer'>✕</button>"
+    + "</div>"
+    + "<div style='font-size:11.5px;color:var(--sub2,#8a929c);margin-bottom:13px'>매장별 적립 현황이에요 · 탈퇴하면 그 매장 스탬프·쿠폰이 삭제돼요</div>"
+    + items + "</div>";
+  document.body.appendChild(w);
 }
 // 단골매장 탈퇴 (그 매장 스탬프·쿠폰만 삭제, 계정 유지)
 async function leaveStore(code, name){
@@ -2981,6 +2988,7 @@ async function leaveStore(code, name){
     _storeData=(_storeData||[]).filter(function(s){ return s.code!==code; });
     toast("["+name+"] 단골에서 제외됐어요");
     _renderMeStores();
+    try{ if(document.getElementById("myStoresModal")) openMyStores(); }catch(e){}
   }catch(e){ toast("탈퇴 처리 중 오류가 발생했어요"); }
 }
 // 로그인 후 탭바 표시
@@ -3125,6 +3133,10 @@ function _storeNewsHtml(code){
   if(evOn){
     h+="<div style='font-size:14px;font-weight:800;letter-spacing:-.01em'>"+esc(d.event_title)+"</div>";
     if(d.event_body){ h+="<div style='font-size:12.5px;color:var(--sub,#556);margin-top:4px;line-height:1.55;white-space:pre-line'>"+esc(d.event_body)+"</div>"; }
+    if(d.event_gift){ h+="<div style='background:var(--brand-soft,#eef4ff);border-radius:9px;padding:9px 12px;margin-top:8px;font-size:12.5px'>🎁 이벤트 선물 · <b>"+esc(d.event_gift)+"</b> <span style='color:var(--sub2,#8a929c);font-size:11.5px'>— 매장에서 직원에게 보여주세요</span></div>"; }
+    if(d.event_viral){
+      h+="<button onclick=\"shareEventKakao('"+esc(code)+"')\" style='width:100%;margin-top:9px;padding:12px;border:none;background:#FEE500;color:#3c1e1e;border-radius:10px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer'>🔥 친구에게 공유하기</button>";
+    }
   }
   h+="</div>";
   return h;
@@ -3149,7 +3161,7 @@ async function _scEnsureData(){
   try{
     var codes=(_storeData||[]).map(function(s){return s.code;}).filter(Boolean);
     if(codes.length){
-      var {data:sts}=await sbRead.from("stores").select("store_code,brand,ad_image_url,ad_youtube_url,event_title,event_body,event_start,event_end").in("store_code",codes);
+      var {data:sts}=await sbRead.from("stores").select("store_code,brand,ad_image_url,ad_youtube_url,event_title,event_body,event_start,event_end,event_gift,event_viral").in("store_code",codes);
       (sts||[]).forEach(function(s){
         if(s.brand) _scStoreBrand[s.store_code]=s.brand;
         _scStoreAd[s.store_code]=s;   // 매장 소식(사진·유튜브·이벤트) 데이터
@@ -3867,7 +3879,7 @@ async function enterMain(){
     }catch(e){}
   }
   await _applyBrandHeader(brandCode);
-  await loadStoreEvent();   // 우리 매장 이벤트 배너 (사장님 등록)
+  // (구)최상단 이벤트 배너 제거 — 이벤트는 매장 카드 안 '매장 소식'에 통합됨
   try{ _checkNewCoupons(); }catch(e){}   // 새로 도착한 쿠폰 있으면 중앙 안내
   // 공유 링크(?ad=1)로 들어오면 이벤트를 펼쳐서 크게 보여줌 (사진+내용+신청)
   try{
@@ -3877,10 +3889,10 @@ async function enterMain(){
       try{ if(localStorage.getItem("bm_last_ad")==="1"){ _adParam="1"; localStorage.removeItem("bm_last_ad"); } }catch(e){}
     } else { try{ localStorage.removeItem("bm_last_ad"); }catch(e){} }
     if(_adParam==="1" && STORE_CODE){ _newsSetClosed(STORE_CODE,false); }   // 공유로 온 손님에겐 소식 다시 펼침
-    if(_adParam==="1" && _storeEvent){
-      _evExpanded=true; renderStoreEventBanner();
-      setTimeout(function(){ var b=$("storeEventBanner"); if(b) b.scrollIntoView({behavior:"smooth",block:"start"}); },200);
-    }
+    if(_adParam==="1" && STORE_CODE){
+      // 공유로 온 손님: 그 매장 카드로 스크롤 (소식은 이미 펼침 상태)
+      setTimeout(function(){ try{ var c=document.getElementById("sccard-"+STORE_CODE); if(c) c.scrollIntoView({behavior:"smooth",block:"start"}); }catch(e){} },400);
+   }
   }catch(e){}
   loadAd();
   // 가입 때 매장을 몰라 신규쿠폰을 못 받은 손님이 이 매장 QR로 진입 → 지금 지급 (적립 전이라도)
@@ -3965,106 +3977,12 @@ async function _findRecentStore(ph){
 }
 
 // ── 매장 이벤트 배너 (사장님이 브랜드노트에서 등록한 이벤트) ──
-var _storeEvent=null;         // 현재 매장 이벤트 데이터
-var _evExpanded=false;        // 배너 펼침 상태
-async function loadStoreEvent(){
-  var box=$("storeEventBanner"); if(!box) return;
-  box.style.display="none"; box.innerHTML=""; _storeEvent=null;
-  if(!STORE_CODE) return;
-  try{
-    var {data}=await sbRead.from("stores").select("*").eq("store_code",STORE_CODE).maybeSingle();
-    if(!data||!data.event_title) return;
-    // 기간 필터 (KST 기준)
-    var today=new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:"Asia/Seoul"}).format(new Date());
-    if(data.event_start && today<data.event_start) return;
-    if(data.event_end && today>data.event_end) return;
-    _storeEvent=data;
-    _evExpanded=false;
-    renderStoreEventBanner();
-    box.style.display="block";
-  }catch(e){ console.log("매장 이벤트 로드 오류:", e); }
-}
-function _evDday(){
-  var e=_storeEvent; if(!e||!e.event_end) return "";
-  var d=Math.ceil((new Date(e.event_end+"T23:59:59+09:00")-new Date())/86400000);
-  if(d<0) return ""; return d===0?"오늘 마감":("D-"+d);
-}
-function toggleStoreEvent(){ _evExpanded=!_evExpanded; renderStoreEventBanner(); }
-function renderStoreEventBanner(){
-  var box=$("storeEventBanner"); var e=_storeEvent; if(!box||!e) return;
-  var dday=_evDday();
-  var giftChip = e.event_gift ? ("🎁 "+esc(e.event_gift)) : "";
-  if(!_evExpanded){
-    // ── 접힌 상태: 제목 + 선물 + D-day (탭하면 펼침) ──
-    box.innerHTML=
-      "<div onclick='toggleStoreEvent()' style='cursor:pointer;border-radius:14px;margin-top:14px;padding:13px 16px;"+
-      "background:linear-gradient(135deg,#1b3a6b,#3182f6);color:#fff'>"+
-        "<div style='display:flex;align-items:center;gap:8px'>"+
-          "<span style='font-size:10px;font-weight:700;background:rgba(255,255,255,.22);border-radius:5px;padding:2px 7px;flex-shrink:0'>이벤트</span>"+
-          "<span style='font-size:14px;font-weight:800;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>"+esc(e.event_title)+"</span>"+
-          (dday?"<span style='font-size:11px;font-weight:800;background:#fff;color:#e5484d;border-radius:5px;padding:2px 7px;flex-shrink:0'>"+dday+"</span>":"")+
-          "<span style='font-size:16px;opacity:.8;flex-shrink:0'>⌄</span>"+
-        "</div>"+
-        (giftChip?"<div style='font-size:12px;opacity:.95;margin-top:6px'>"+giftChip+"</div>":"")+
-      "</div>";
-    return;
-  }
-  // ── 펼친 상태: 사진 + 내용 + 선물 + (바이럴)공유 ──
-  var img = e.ad_image_url ? ("<img src='"+esc(e.ad_image_url)+"' style='width:100%;display:block;border-radius:12px;margin-bottom:12px'>") : "";
-  var yt="";
-  if(e.ad_youtube_url){
-    var vid=_ytId(e.ad_youtube_url);
-    if(vid){
-      // 쇼츠(shorts) URL이면 세로(9:16), 아니면 가로(16:9)
-      var isShorts=/\/shorts\//i.test(e.ad_youtube_url);
-      var pb=isShorts?177:56;   // 177% = 9:16 세로, 56% = 16:9 가로
-      var maxw=isShorts?"max-width:300px;margin-left:auto;margin-right:auto;":"";
-      yt="<div style='"+maxw+"'><div style='position:relative;padding-bottom:"+pb+"%;height:0;border-radius:12px;overflow:hidden;margin-bottom:12px;background:#000'><iframe src='https://www.youtube.com/embed/"+vid+"' style='position:absolute;top:0;left:0;width:100%;height:100%;border:0' allowfullscreen></iframe></div></div>";
-    }
-  }
-  var giftBox = e.event_gift ? ("<div style='background:rgba(255,255,255,.16);border-radius:10px;padding:11px 13px;margin:10px 0;font-size:13px'>🎁 이벤트 선물 · <b>"+esc(e.event_gift)+"</b> <span style='opacity:.85;font-size:12px'>— 매장에서 직원에게 보여주세요</span></div>") : "";
-  // 바이럴 공유 유도
-  var viralBox="";
-  if(e.event_viral){
-    viralBox=
-      "<div style='background:rgba(255,255,255,.12);border-radius:12px;padding:13px 14px;margin-top:12px'>"+
-        "<div style='font-size:13px;font-weight:800'>🔥 친구에게 공유하고 함께 혜택 받으세요!</div>"+
-        "<div style='font-size:11.5px;opacity:.9;margin-top:4px;line-height:1.6'>친구도 이 매장의 신규 쿠폰·스탬프 혜택을 받을 수 있어요.</div>"+
-        "<button onclick='shareEventKakao()' style='width:100%;background:#FEE500;color:#3c1e1e;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:10px'>친구에게 공유하기</button>"+
-      "</div>";
-  }
-  box.innerHTML=
-    "<div style='border-radius:14px;margin-top:14px;padding:16px;"+
-    "background:linear-gradient(135deg,#1b3a6b,#3182f6);color:#fff'>"+
-      "<div onclick='toggleStoreEvent()' style='cursor:pointer;display:flex;align-items:center;gap:8px;margin-bottom:12px'>"+
-        "<span style='font-size:10px;font-weight:700;background:rgba(255,255,255,.22);border-radius:5px;padding:2px 7px'>이벤트</span>"+
-        "<span style='font-size:16px;font-weight:800;flex:1'>"+esc(e.event_title)+"</span>"+
-        "<span style='font-size:16px;opacity:.8'>⌃</span>"+
-      "</div>"+
-      img+yt+
-      (_evDday()?"<div style='margin:0 0 10px'><span style='display:inline-block;font-size:12px;font-weight:800;background:#fff;color:#e5484d;border-radius:6px;padding:3px 10px'>"+_evDday()+"</span></div>":"")+
-      (e.event_body?"<div style='font-size:13px;opacity:.95;line-height:1.7'>"+esc(e.event_body)+"</div>":"")+
-      giftBox+
-      viralBox+
-    "</div>";
-}
-function _ytId(u){
-  try{
-    var s=String(u).trim();
-    // watch?v=, youtu.be/, embed/, live/, shorts/, v/ 모두 지원
-    var m=s.match(/(?:youtu\.be\/|\/live\/|\/shorts\/|\/embed\/|\/v\/|[?&]v=)([A-Za-z0-9_-]{6,})/);
-    if(m) return m[1];
-    // 순수 ID만 붙여넣은 경우
-    if(/^[A-Za-z0-9_-]{6,}$/.test(s)) return s;
-    return "";
-  }catch(e){ return ""; }
-}
-// ── 바이럴 공유 (카톡으로 친구에게) ──
-function shareEventKakao(){
-  var e=_storeEvent; if(!e) return;
+function shareEventKakao(code){
+  var e=(_scStoreAd&&_scStoreAd[code])||null; if(!e||!e.event_title) return;
   var base=location.origin;
-  var url=base+"/index.html?store="+encodeURIComponent(STORE_CODE)+"&ad=1";
-  var title=(STORE_NAME||"우리 가게")+" · "+e.event_title;
+  var url=base+"/index.html?store="+encodeURIComponent(code)+"&ad=1";
+  var _sn=""; try{ (_storeData||[]).forEach(function(x){ if(x.code===code) _sn=x.name; }); }catch(err){}
+  var title=(_sn||"우리 가게")+" · "+e.event_title;
   var desc=(e.event_gift?("🎁 "+e.event_gift+" · "):"")+(e.event_body||"이벤트 확인하기");
   var thumb=e.ad_image_url||(base+"/icon-512.png");
   try{
