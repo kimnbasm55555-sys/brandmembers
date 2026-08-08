@@ -1385,7 +1385,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.38";
+const CUST_APP_VERSION = "5.9.39";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 // 카톡 등 인앱 브라우저는 타 도메인 iframe(착한창업)을 차단 → 안내 화면 HTML 반환 (아니면 "")
@@ -3055,12 +3055,7 @@ async function renderStoreCards(){
   }
 
   // 매장→브랜드, 매장별 본사 이벤트, 매장별 쿠폰수 준비 (한 번만 네트워크 조회)
-  var _wasLoaded=_scLoadedOnce;
   await _scEnsureData();
-  // 방금 처음 소식을 불러왔다면(이전엔 비어있었음), 그린 직후 한 번 더 그려 매장 소식을 채움
-  if(!_wasLoaded && _scStoreAd && Object.keys(_scStoreAd).length){
-    setTimeout(function(){ try{ renderStoreCards(); }catch(e){} }, 60);
-  }
 
   // 매장별 쿠폰 수 (window._myCoupons를 store_code로 집계)
   var cpnByStore={};
@@ -3181,10 +3176,10 @@ async function _scEnsureData(){
   try{
     var codes=(_storeData||[]).map(function(s){return s.code;}).filter(Boolean);
     if(codes.length){
-      var {data:sts}=await sbRead.from("stores").select("store_code,brand,ad_image_url,ad_youtube_url,event_title,event_body,event_start,event_end,event_gift,event_viral").in("store_code",codes);
+      var {data:sts}=await sbRead.from("stores").select("store_code,brand_code,ad_image_url,ad_youtube_url,event_title,event_body,event_start,event_end,event_gift,event_viral").in("store_code",codes);
       if(!sts || !sts.length){ _scLoadedOnce=false; }   // 못 받았으면 다음 렌더 때 재시도
       (sts||[]).forEach(function(s){
-        if(s.brand) _scStoreBrand[s.store_code]=s.brand;
+        if(s.brand_code) _scStoreBrand[s.store_code]=s.brand_code;   // 실제 컬럼명은 brand_code
         _scStoreAd[s.store_code]=s;   // 매장 소식(사진·유튜브·이벤트) 데이터
       });
     }
