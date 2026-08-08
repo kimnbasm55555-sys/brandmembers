@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.26";
+const CUST_APP_VERSION = "5.9.27";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -5929,8 +5929,12 @@ function renderStoreStamps(){
     btn="<div style='text-align:center;font-size:12px;color:var(--text3);padding:6px 0;'>이 매장 QR을 찍으면 적립돼요</div>";
   }
 
+  // 모은 스탬프가 있으면 '지키려면 저장' 배너 (부드럽게)
+  var _totalBal=0; try{ _storeData.forEach(function(x){ _totalBal+=(x.balance||0); }); }catch(e){}
+  var _keepBar = (_totalBal>0 && typeof _keepInstallBarHtml==="function") ? _keepInstallBarHtml("내 스탬프 "+_totalBal+"개") : "";
   wrap.innerHTML=
     chipsHtml+
+    _keepBar+
     _storeNewsHtml(s.code)+
     "<div class='card'>"+
       "<div class='store-head'>"+
@@ -6049,6 +6053,33 @@ async function doRedeem(storeCode){
   await refreshStamps();
   _fastApproveWatch();   // 신청 직후 빠르게 승인 확인
 }
+// ══════ '내 혜택을 지키려면 앱 저장' 부드러운 설치 유도 배너 ══════
+// 이미 설치했거나(standalone), 손님이 닫았으면 안 뜸. 카톡 등 어디서 열든 표시.
+function _keepBannerClosed(){ try{ return sessionStorage.getItem("bm_keep_closed")==="1"; }catch(e){ return false; } }
+function keepBannerClose(){ try{ sessionStorage.setItem("bm_keep_closed","1"); }catch(e){} var el=document.getElementById("keepInstallBar"); if(el) el.remove(); }
+function keepBannerInstall(){
+  // 카톡 등 인앱 브라우저면 먼저 밖으로(설치는 인앱에서 불가) → 그 외엔 설치 안내/프롬프트
+  try{ if(typeof _custInappName==="function" && _custInappName() && typeof custInappOpen==="function"){ custInappOpen(); return; } }catch(e){}
+  try{ if(typeof pwaOpenInstall==="function"){ pwaOpenInstall(); return; } }catch(e){}
+  toast("우측 상단 메뉴 → '홈 화면에 추가'를 눌러주세요");
+}
+// n개 혜택 요약을 받아 배너 HTML 반환 ("" 면 표시 안 함)
+function _keepInstallBarHtml(summary){
+  try{ if(_pwaIsInstalled && _pwaIsInstalled()) return ""; }catch(e){}
+  if(_keepBannerClosed()) return "";
+  var line = summary || "내 쿠폰·스탬프";
+  return "<div id='keepInstallBar' style='display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#eef3ff,#f5f0ff);border:1px solid #dbe4ff;border-radius:14px;padding:12px 13px;margin-bottom:13px'>"
+    + "<div style='width:36px;height:36px;border-radius:10px;background:#3b4cca;flex-shrink:0;display:flex;align-items:center;justify-content:center'>"
+    +   "<svg viewBox='0 0 24 24' width='19' height='19' fill='none' stroke='#fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3v12M8 11l4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2'/></svg></div>"
+    + "<div style='flex:1;min-width:0'>"
+    +   "<div style='font-size:13.5px;font-weight:800;color:#1a1d24;line-height:1.35'>"+esc(line)+", 안전하게 보관하세요</div>"
+    +   "<div style='font-size:11.5px;color:#6b7280;margin-top:2px'>홈 화면에 추가하면 사라지지 않고 알림도 받아요</div>"
+    + "</div>"
+    + "<button onclick='keepBannerInstall()' style='background:#3b4cca;color:#fff;border:none;font-size:12.5px;font-weight:800;padding:10px 13px;border-radius:100px;cursor:pointer;flex-shrink:0;font-family:inherit'>저장</button>"
+    + "<button onclick='keepBannerClose()' style='background:none;border:none;color:#aab0bb;font-size:15px;cursor:pointer;padding:2px 3px;flex-shrink:0'>✕</button>"
+    + "</div>";
+}
+
 async function refreshCoupons(){
   var box=$("couponList");
   // ★ 데모: 실제 coupons 안 씀. 가짜 샘플 쿠폰.
@@ -6159,7 +6190,10 @@ async function refreshCoupons(){
     }
     html+=byStore[sc].map(renderOne).join("");
   });
-  box.innerHTML=html;
+  // 보유 쿠폰이 있으면 상단에 '지키려면 저장' 배너 (부드럽게)
+  var _cpnCnt=(data||[]).filter(function(c){ return c.status!=="used" && !(c.expires_at && new Date(c.expires_at)<new Date()); }).length;
+  var _bar = (_cpnCnt>0) ? _keepInstallBarHtml("내 쿠폰 "+_cpnCnt+"장") : "";
+  box.innerHTML=_bar+html;
 }
 
 // 손님이 '사용하기' 누름 → 사용요청 (점주 확인 대기) + 실시간 감지
