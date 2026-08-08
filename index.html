@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.27";
+const CUST_APP_VERSION = "5.9.28";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -2484,7 +2484,11 @@ function _custInappName(){
 }
 function custInappOpen(){
   var ua=(navigator.userAgent||"").toLowerCase();
+  // 나간 브라우저에서 설치 안내가 자동으로 뜨도록 install=1 플래그를 붙인다
   var url=location.href;
+  try{
+    var u=new URL(location.href); u.searchParams.set("install","1"); url=u.toString();
+  }catch(e){}
   if(/android/.test(ua)){
     location.href="intent://"+url.replace(/^https?:\/\//,"")+"#Intent;scheme=https;package=com.android.chrome;end";
     return;
@@ -2712,7 +2716,18 @@ window.addEventListener("DOMContentLoaded",function(){
     if(typeof DEMO_MODE!=="undefined" && DEMO_MODE) return;
     var forceInstall=false;
     try{ forceInstall=new URLSearchParams(location.search).get("install")==="1"; }catch(e){}
-    if(forceInstall){ pwaOpenInstall(); return; }
+    if(forceInstall){
+      // 아이폰: 안내 모달 바로. 안드로이드: 설치 프롬프트가 준비되면(_pwaDeferredPrompt) 그때 실행,
+      //   준비 안 됐으면 잠시 기다렸다가 재시도 (beforeinstallprompt는 로드 직후 살짝 늦게 옴)
+      if(_pwaIsIos()){ pwaOpenInstall(); return; }
+      var _tries=0;
+      var _iv=setInterval(function(){
+        _tries++;
+        if(_pwaDeferredPrompt){ clearInterval(_iv); pwaInstall(); }
+        else if(_tries>=8){ clearInterval(_iv); pwaOpenInstall(); }   // 4초 내 안 오면 수동 안내
+      }, 500);
+      return;
+    }
     // iOS 하단 설치 배너는 제거함. 안내는 상단 Safari 안내(custInappGuide)로 일원화 (2026-07-25)
     // 상단·하단이 동시에 떠서 헷갈리는 문제 방지 — 한 번에 하나만 보여준다.
   },1400);
@@ -6058,8 +6073,11 @@ async function doRedeem(storeCode){
 function _keepBannerClosed(){ try{ return sessionStorage.getItem("bm_keep_closed")==="1"; }catch(e){ return false; } }
 function keepBannerClose(){ try{ sessionStorage.setItem("bm_keep_closed","1"); }catch(e){} var el=document.getElementById("keepInstallBar"); if(el) el.remove(); }
 function keepBannerInstall(){
-  // 카톡 등 인앱 브라우저면 먼저 밖으로(설치는 인앱에서 불가) → 그 외엔 설치 안내/프롬프트
+  // 1) 안드로이드에서 설치 프롬프트가 이미 준비돼 있으면 바로 설치 팝업
+  try{ if(_pwaDeferredPrompt){ pwaInstall(); return; } }catch(e){}
+  // 2) 카톡 등 인앱 브라우저면 밖으로 내보내기(설치는 인앱에서 불가) — install=1 달고 나감
   try{ if(typeof _custInappName==="function" && _custInappName() && typeof custInappOpen==="function"){ custInappOpen(); return; } }catch(e){}
+  // 3) 그 외(사파리/크롬 직접) → 설치 안내(아이폰 모달/안드 프롬프트)
   try{ if(typeof pwaOpenInstall==="function"){ pwaOpenInstall(); return; } }catch(e){}
   toast("우측 상단 메뉴 → '홈 화면에 추가'를 눌러주세요");
 }
