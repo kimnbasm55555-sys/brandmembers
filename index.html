@@ -1105,8 +1105,8 @@
       <!-- 홈 제목·인사말 -->
       <div id="custHomeTop"></div>
 
-      <!-- 매장 이벤트 배너 (사장님이 등록한 우리 매장 소식) -->
-      <div id="storeEventBanner" style="display:none"></div>
+      <!-- 매장 이벤트 배너: 매장 카드 안 '매장 소식'으로 통합됨 → 최상단 중복 제거 (항상 숨김) -->
+      <div id="storeEventBanner" style="display:none !important"></div>
 
       <!-- 폐점 안내 배너 (점주가 탈퇴 시 등록) -->
       <div id="closingNoticeBanner" style="display:none"></div>
@@ -1382,7 +1382,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.33";
+const CUST_APP_VERSION = "5.9.34";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -3085,9 +3085,10 @@ function _storeNewsHtml(code){
       + "<span style='font-size:11px;color:var(--text3,#9aa3af)'>펼치기 ▾</span>"
       + "</div>";
   }
-  var h="<div style='background:#fff;border:1px solid var(--line,#e8ebef);border-radius:14px;padding:13px;margin-bottom:10px' onclick='event.stopPropagation()'>"
+  var _mColor=(typeof _scColorFor==='function')?_scColorFor(code):"#3b4cca";
+  var h="<div style='background:#fff;border:1px solid var(--line,#e8ebef);border-left:4px solid "+_mColor+";border-radius:12px;padding:13px;margin-bottom:10px' onclick='event.stopPropagation()'>"
     + "<div style='display:flex;align-items:center;margin-bottom:9px'>"
-    +   "<span style='font-size:12px;font-weight:800;color:var(--brand-dark,#1d4ed8);background:var(--brand-soft,#eef4ff);border-radius:7px;padding:3px 9px'>📣 매장 소식</span>"
+    +   "<span style='font-size:12px;font-weight:800;color:#fff;background:"+_mColor+";border-radius:7px;padding:3px 9px'>📣 매장 소식</span>"
     +   (dday?"<span style='font-size:10.5px;font-weight:800;color:#fff;background:#ff6b35;border-radius:6px;padding:2px 7px;margin-left:6px'>"+esc(dday)+"</span>":"")
     +   "<span style='flex:1'></span>"
     +   "<span style='font-size:11px;color:var(--text3,#9aa3af);cursor:pointer;padding:4px' onclick=\"newsToggle('"+esc(code)+"',event)\">접기 ▴</span>"
@@ -3241,7 +3242,9 @@ function _scCardHtml(it,goal,idx){
     ? "<img class='sc-cthumb' src='"+esc(thumbImg)+"' alt=''>"
     : "";
 
-  return "<div class='sc-card2"+(hasNew?" sc-new":"")+"' id='sccard-"+esc(s.code)+"'>"
+  // 매장별 색 테두리(왼쪽 굵은 바) — 매장이 여러 개여도 어느 매장 카드인지 색으로 즉시 구별
+  var _cardStyle="border-left:5px solid "+logoBg+";";
+  return "<div class='sc-card2"+(hasNew?" sc-new":"")+"' id='sccard-"+esc(s.code)+"' style='"+_cardStyle+"'>"
     + "<div class='sc-chead' onclick=\"scToggleCard('"+esc(s.code)+"')\">"
     +   "<div class='sc-clogo' style='background:"+logoBg+"'>"+esc(initial)+"</div>"
     +   "<div class='sc-cmid'>"
