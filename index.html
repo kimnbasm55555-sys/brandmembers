@@ -1375,7 +1375,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.28";
+const CUST_APP_VERSION = "5.9.29";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -2328,9 +2328,11 @@ async function initAutoUpdate(){
   // ★ 일회성 강제 캐시 정리 (2026-08 배포) — 옛 서비스워커가 로고 등을 캐시에 붙들고 있는 문제 해결
   // 이 플래그가 없으면 한 번만 실행: 모든 캐시 삭제 + 옛 워커 해제 → 새로고침
   try{
-    var _purgeFlag = "bm_cache_purge_v3";
+    var _purgeFlag = "bm_cache_purge_v4";
     if(!localStorage.getItem(_purgeFlag)){
       localStorage.setItem(_purgeFlag, "1");
+      // 예전 잘못 저장된 '설치함' 기록 제거 → 앱 없는 손님에게 다시 설치 권유가 뜨도록
+      try{ localStorage.removeItem("blnk_cust_pwa_installed"); }catch(e){}
       // 모든 캐시 스토리지 삭제
       if(window.caches){
         var keys = await caches.keys();
@@ -2518,7 +2520,7 @@ function custInappClose(){
   document.body.style.paddingTop="";
 }
 function initCustInappGuide(){
-  try{ if(_pwaIsInstalled()) return; }catch(e){}
+  try{ if(_pwaIsInstalled()) return; }catch(e){}   // 지금 창이 설치앱이면 안내 불필요
   // 직원 초대(?join=)로 들어온 사람은 '설치 의무' → 닫기 없이 항상 안내를 띄운다.
   var _isJoin=false; try{ _isJoin=!!getJoinCode(); }catch(e){}
   if(!_isJoin){
@@ -2568,11 +2570,9 @@ function initCustInappGuide(){
 window.addEventListener("DOMContentLoaded", function(){ setTimeout(function(){ try{ initCustInappGuide(); }catch(e){} }, 1400); });
 
 function _pwaIsInstalled(){
-  var standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
-  // 설치된 앱(standalone)으로 열렸다면 '설치 완료' 기록을 남긴다.
-  // → 이후 같은 폰이 QR을 카메라로 찍어 브라우저로 열려도 재설치를 강요하지 않음
-  if(standalone){ try{ localStorage.setItem("blnk_cust_pwa_installed","1"); }catch(e){} }
-  return standalone;
+  // '지금 이 창'이 설치된 앱(홈 화면 아이콘)으로 열렸는지만 본다.
+  // (예전 '설치함' 기록에 의존하지 않음 — 앱을 지운 손님에게도 다시 권유가 뜨도록)
+  return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
 }
 function _pwaIsIos(){
   var ua=window.navigator.userAgent.toLowerCase();
@@ -2589,9 +2589,6 @@ function igAlreadyDismissed(){
 function _shouldGateInstall(){
   if(_pwaIsInstalled()) return false;
   if(igAlreadyDismissed()) return false;
-  // 이 폰에 이미 설치한 기록이 있으면(다른 매장에서 설치·로그인 완료) 재설치 강요하지 않음
-  // → QR을 일반 카메라로 찍어 브라우저로 열려도 바로 적립 가능
-  try{ if(localStorage.getItem("blnk_cust_pwa_installed")==="1") return false; }catch(e){}
   var isDemo=false, isPeek=false, isWork=false, isStoreLink=false;
   try{ isDemo=(new URLSearchParams(location.search).get("demo")==="1"); }catch(e){}
   try{ isPeek=!!new URLSearchParams(location.search).get("peek"); }catch(e){}
@@ -2681,12 +2678,14 @@ window.addEventListener("appinstalled",function(){
   }
 });
 function _pwaMaybeShowBanner(){
-  if(_pwaIsInstalled()) return;
-  if(typeof DEMO_MODE!=="undefined" && DEMO_MODE) return;   // 데모는 설치 배너 숨김
-  try{ if(localStorage.getItem("blnk_cust_pwa_installed")==="1") return; }catch(e){}
+  if(_pwaIsInstalled()) return;                              // 이미 설치앱이면 숨김
+  if(typeof DEMO_MODE!=="undefined" && DEMO_MODE) return;    // 데모는 숨김
+  if(typeof PEEK_MODE!=="undefined" && PEEK_MODE) return;    // 사장님 미리보기 숨김
+  // 카톡 등 인앱 브라우저에서는 상단 '앱으로 열기' 안내가 담당하므로 하단 배너 중복 표시 안 함
+  try{ if(typeof _custInappName==="function" && _custInappName()) return; }catch(e){}
   try{
     var d=localStorage.getItem("blnk_cust_pwa_dismiss");
-    if(d && (Date.now()-parseInt(d,10) < 3*24*60*60*1000)) return;
+    if(d && (Date.now()-parseInt(d,10) < 3*24*60*60*1000)) return;  // 손님이 닫으면 3일간 안 뜸
   }catch(e){}
   var banner=$("pwaBanner"); if(banner) banner.style.display="flex";
 }
@@ -2714,6 +2713,8 @@ window.addEventListener("DOMContentLoaded",function(){
   setTimeout(function(){
     if(_pwaIsInstalled()) return;
     if(typeof DEMO_MODE!=="undefined" && DEMO_MODE) return;
+    // 앱 없이 일반 브라우저로 열린 손님 → 하단 설치 배너를 부드럽게 표시
+    try{ _pwaMaybeShowBanner(); }catch(e){}
     var forceInstall=false;
     try{ forceInstall=new URLSearchParams(location.search).get("install")==="1"; }catch(e){}
     if(forceInstall){
@@ -6425,9 +6426,11 @@ async function demoEnter(){
     _oauthReturning = /access_token=|[?&]code=/.test(location.hash+location.search);
   }catch(e){}
   var _staffArrival = JOIN_ARRIVAL || WORK_MODE || !!CONTRACT_ID || !!RESIGN_ID;
-  if(_shouldGateInstall() && !_oauthReturning && !_staffArrival){
+  // ★ 손님은 설치 강제 게이트 제거 — 설치 없이 바로 이용, 설치는 부드러운 배너로만 권유.
+  //   직원(출퇴근·초대·계약)만 설치가 필요하므로 게이트 유지.
+  if(_staffArrival && _shouldGateInstall() && !_oauthReturning){
     showInstallGate();
-    return;   // 설치 전엔 로그인·스탬프 등 아무 화면도 안 보여줌
+    return;
   }
 
   // ── 점주 미리보기 (?peek=phone_hash) : 손님 화면을 읽기전용으로 진입 ──
