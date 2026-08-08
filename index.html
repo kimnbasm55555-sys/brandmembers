@@ -1382,7 +1382,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.34";
+const CUST_APP_VERSION = "5.9.35";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 
@@ -3845,6 +3845,7 @@ async function enterMain(){
   }
   await _applyBrandHeader(brandCode);
   await loadStoreEvent();   // 우리 매장 이벤트 배너 (사장님 등록)
+  try{ _checkNewCoupons(); }catch(e){}   // 새로 도착한 쿠폰 있으면 중앙 안내
   // 공유 링크(?ad=1)로 들어오면 이벤트를 펼쳐서 크게 보여줌 (사진+내용+신청)
   try{
     var _adParam=new URLSearchParams(location.search).get("ad");
@@ -3868,6 +3869,59 @@ async function enterMain(){
   }catch(e){}
   await refreshStamps(); await refreshCoupons();
   startStampRealtime();   // 매장 승인 → 손님 화면 즉시 반영
+}
+
+// ══════ 새 쿠폰 도착 안내 (앱 접속 시 화면 중앙 모달) ══════
+// 마지막 확인 시각(bm_cpn_seen_at) 이후 발급된 쿠폰이 있으면
+// "어느 매장이 · 어떤 쿠폰을" 보냈는지 중앙에 안내. 확인하면 시각 갱신.
+async function _checkNewCoupons(){
+  if(!CUST || !CUST.phone_hash || PEEK_MODE || DEMO_MODE) return;
+  var KEY="bm_cpn_seen_at", seen=null;
+  try{ seen=localStorage.getItem(KEY); }catch(e){}
+  if(!seen){
+    // 첫 실행: 기존 쿠폰을 전부 '새 쿠폰'으로 띄우면 스팸이라, 기준 시각만 심고 조용히 종료
+    try{ localStorage.setItem(KEY,new Date().toISOString()); }catch(e){}
+    return;
+  }
+  var rows=[];
+  try{
+    var {data}=await sb.from("coupons").select("id,title,type,store_code,created_at")
+      .eq("phone_hash",CUST.phone_hash).eq("status","issued")
+      .gt("created_at",seen).order("created_at",{ascending:false}).limit(5);
+    rows=data||[];
+  }catch(e){ return; }
+  if(!rows.length) return;
+  // 매장 이름 조회 (중복 제거, 최대 3곳)
+  var names={};
+  var codes=[]; rows.forEach(function(r){ if(r.store_code && codes.indexOf(r.store_code)<0) codes.push(r.store_code); });
+  for(var i=0;i<Math.min(codes.length,3);i++){
+    try{ names[codes[i]]=await loadStoreName(codes[i]); }catch(e){}
+  }
+  function tname(t){ return t==="free"?"무료 교환권":(t==="discount2000"?"2,000원 쿠폰":(t==="discount3000"?"3,000원 쿠폰":"쿠폰")); }
+  var items=rows.map(function(r){
+    var st=names[r.store_code]||"매장";
+    var col=(typeof _scColorFor==="function")?_scColorFor(r.store_code||""):"#3b4cca";
+    return "<div style='display:flex;align-items:center;gap:10px;background:#f7f9ff;border-left:4px solid "+col+";border-radius:10px;padding:11px 12px;margin-bottom:8px;text-align:left'>"
+      + "<div style='font-size:20px'>🎟️</div>"
+      + "<div style='flex:1;min-width:0'>"
+      +   "<div style='font-size:13.5px;font-weight:800;color:#1a1d24'>"+esc(st)+"</div>"
+      +   "<div style='font-size:12.5px;color:#4b5563;margin-top:2px'>"+esc(r.title||tname(r.type))+"</div>"
+      + "</div></div>";
+  }).join("");
+  var wrap=document.createElement("div");
+  wrap.id="newCpnModal";
+  wrap.style.cssText="position:fixed;inset:0;z-index:100005;background:rgba(15,18,30,.55);display:flex;align-items:center;justify-content:center;padding:24px";
+  wrap.innerHTML=
+    "<div style='background:#fff;border-radius:20px;padding:24px 20px;max-width:330px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)'>"
+    + "<div style='font-size:40px;margin-bottom:6px'>🎁</div>"
+    + "<div style='font-size:17px;font-weight:900;color:#1a1d24;margin-bottom:4px'>새 쿠폰이 도착했어요!</div>"
+    + "<div style='font-size:12.5px;color:#6b7280;margin-bottom:14px'>"+rows.length+"장의 쿠폰을 받았어요</div>"
+    + items
+    + "<button onclick=\"document.getElementById('newCpnModal').remove();custTab('stamp')\" style='width:100%;margin-top:8px;padding:14px;border:none;background:#3b4cca;color:#fff;border-radius:12px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer'>쿠폰 확인하러 가기</button>"
+    + "<button onclick=\"document.getElementById('newCpnModal').remove()\" style='width:100%;margin-top:8px;padding:11px;border:none;background:none;color:#9ca3af;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer'>나중에 볼게요</button>"
+    + "</div>";
+  document.body.appendChild(wrap);
+  try{ localStorage.setItem(KEY,new Date().toISOString()); }catch(e){}
 }
 
 // 이 손님이 최근 이용한 매장 찾기 — 스탬프 > 쿠폰 순으로 가장 최근 store_code
@@ -6228,9 +6282,10 @@ async function refreshCoupons(){
       else if(diffDays===0){ ddayHtml="<span style='display:inline-block;font-size:11px;font-weight:800;color:#fff;background:#e5484d;border-radius:5px;padding:2px 7px;margin-top:4px'>오늘 마감 D-DAY</span>"; }
       else { var urgent=diffDays<=3; ddayHtml="<span style='display:inline-block;font-size:11px;font-weight:800;color:#fff;background:"+(urgent?"#e5484d":"#3182f6")+";border-radius:5px;padding:2px 7px;margin-top:4px'>D-"+diffDays+"</span>"; }
     }
-    var canShare=!used && !expired && !reqUse;
-    var badge = used ? "사용완료" : (expired?"만료":(reqUse?"확인 대기":"사용가능"));
     var isViral=!!c.viral;
+    // 바이럴 스위치 OFF로 발급된 쿠폰은 카톡 공유 버튼·안내문을 아예 붙이지 않음
+    var canShare=!used && !expired && !reqUse && isViral;
+    var badge = used ? "사용완료" : (expired?"만료":(reqUse?"확인 대기":"사용가능"));
     var shareBtn = canShare ? ("<button class='c-share-kakao"+(isViral?" viral":"")+"' onclick=\"giftCoupon('"+esc(c.id)+"','"+esc(c.type)+"','"+esc(c.code)+"')\">"+
       "<svg viewBox='0 0 24 24' width='18' height='18' fill='#3C1E1E'><path d='M12 3C6.5 3 2 6.5 2 10.8c0 2.8 1.9 5.2 4.7 6.6-.2.7-.7 2.6-.8 3-.1.5.2.5.4.4.2-.1 2.6-1.8 3.7-2.5.6.1 1.3.1 2 .1 5.5 0 10-3.5 10-7.8S17.5 3 12 3z'/></svg>"+
       "친구에게 선물하기"+
@@ -6323,9 +6378,9 @@ function giftDemo(){
   var brandCode="";
   try{ brandCode=new URLSearchParams(location.search).get("brand")||""; }catch(e){}
   if(!brandCode) brandCode=(CUST&&CUST.brand)||window._primaryBrandCode||"";
-  var url=_shareBase()+"share.html?gift=DEMO"+(brandCode?("&brand="+encodeURIComponent(brandCode)):"");
+  var url=_shareBase()+"index.html?gift=DEMO"+(brandCode?("&brand="+encodeURIComponent(brandCode)):"");
   var brandLabel=BRAND_NAME?(BRAND_NAME+" "):"";
-  var thumb=window._brandLogoUrl||window._custAdThumb||"https://brandplus-hycy.vercel.app/icon-512.png";
+  var thumb="https://brandmembers.vercel.app/icon-512.png";
   if(custKakaoReady()){
     try{
       Kakao.Share.sendDefault({
@@ -6365,12 +6420,12 @@ async function giftCoupon(couponId, ctype, ccode){
     // ⚠️ 나눔(복사) 방식: 내 쿠폰은 잠그지 않는다. 친구가 받으면 '새 쿠폰'이 발급됨. 내 것은 그대로 유지·무제한 공유 가능.
     // (기존 '선물=이전' 방식의 gifting 잠금 제거)
     // 카카오 공유 (share 페이지 = 광고 + 쿠폰 함께 전달)
-    var url=_shareBase()+"share.html?gift="+encodeURIComponent(token)+(brand?("&brand="+encodeURIComponent(brand)):"");
+    var url=_shareBase()+"index.html?gift="+encodeURIComponent(token)+(brand?("&brand="+encodeURIComponent(brand)):"");   // share.html(404) → index.html
     // 실제 쿠폰명(title) 우선, 없으면 종류명
     var couponLabel = (arguments.length>3 && arguments[3]) ? arguments[3] : ((ctype==="free")?"무료 교환권":(ctype==="discount2000"?"2,000원 배달 쿠폰":"3,000원 할인 쿠폰"));
     var typeName = couponLabel;
     var brandLabel=BRAND_NAME?(BRAND_NAME+" "):"";
-    var thumb=window._brandLogoUrl||window._custAdThumb||"https://brandplus-hycy.vercel.app/icon-512.png";
+    var thumb="https://brandmembers.vercel.app/icon-512.png";   // 멤버스 로고 (옛 브랜드링커 로고 제거)
     if(custKakaoReady()){
       try{
         Kakao.Share.sendDefault({
