@@ -1389,7 +1389,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.46";
+const CUST_APP_VERSION = "5.9.47";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 // 카톡 등 인앱 브라우저는 타 도메인 iframe(착한창업)을 차단 → 안내 화면 HTML 반환 (아니면 "")
@@ -1529,10 +1529,27 @@ var _custExitWarnAt=0, _custExitConfirmed=false, _custHistDepth=0;
     for(var i=0;i<3;i++){ history.pushState({bnGuard:true, i:i}, ""); _custHistDepth++; }
     window.addEventListener("popstate", function(){
       if(_custExitConfirmed) return;
-      // 열린 하위 화면(근무기록/계약서 등)이 있으면 그것부터 닫기
+      // ★ 먼저 한 겹 즉시 재충전 → 어떤 경로든 다음 백키를 반드시 이 핸들러가 잡는다
+      history.pushState({bnGuard:true}, "");
+      // ① 열린 하위 화면(근무기록/계약서 등)이 있으면 그것부터 닫기
       var closed = _closeAnyOpenView();
-      if(closed){ history.pushState({bnGuard:true}, ""); return; }
-      // 아니면 종료 경고
+      if(closed){ return; }
+      // ② 착한창업 상세(iframe 내부)가 열려 있으면 iframe에 뒤로가기 요청
+      try{
+        var bp=document.getElementById("cpage-benefit");
+        if(bp && bp.classList.contains("on")){
+          var ifr=document.querySelector("#custBenefitHost iframe");
+          if(ifr && ifr.contentWindow){ ifr.contentWindow.postMessage({type:"benBack"}, "*"); }
+          // 착한창업 탭 자체는 홈으로 (아래 ③에서 처리)
+        }
+      }catch(e){}
+      // ③ 홈이 아닌 탭이면 홈으로 먼저 (바로 종료하지 않게)
+      var homeP=document.getElementById("cpage-home");
+      if(homeP && !homeP.classList.contains("on")){
+        try{ custTab("home"); }catch(e){}
+        return;
+      }
+      // ④ 홈에서 누르면 종료 경고
       var now=Date.now();
       if(now-_custExitWarnAt < 2000){
         _custExitConfirmed=true;
@@ -1542,7 +1559,6 @@ var _custExitWarnAt=0, _custExitConfirmed=false, _custHistDepth=0;
       }
       _custExitWarnAt=now;
       toast("한 번 더 누르면 앱을 닫아요");
-      history.pushState({bnGuard:true}, "");  // 다시 한 겹 채워서 대기
     });
   }catch(e){}
 })();
