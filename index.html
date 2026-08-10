@@ -1385,7 +1385,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.40";
+const CUST_APP_VERSION = "5.9.41";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 // 카톡 등 인앱 브라우저는 타 도메인 iframe(착한창업)을 차단 → 안내 화면 HTML 반환 (아니면 "")
@@ -3140,13 +3140,13 @@ function _storeNewsHtml(code){
     + "</div>";
   // 영상: 썸네일만 작게(가로 60%), ▶ 탭하면 그 자리에서 재생
   if(ytId){
-    h+="<div style='max-width:230px;margin:0 auto 9px'><div class='sc-ev' data-yt='"+esc(ytId)+"' onclick=\"scPlayYt(this)\" style='margin-bottom:0'>"
+    h+="<div style='max-width:345px;margin:0 auto 9px'><div class='sc-ev' data-yt='"+esc(ytId)+"' onclick=\"scPlayYt(this)\" style='margin-bottom:0'>"
       + "<img src='https://i.ytimg.com/vi/"+esc(ytId)+"/hqdefault.jpg' alt='' onerror=\"this.src='https://i.ytimg.com/vi/"+esc(ytId)+"/mqdefault.jpg'\">"
       + "<div class='sc-ev-play'><div class='pl'>▶</div></div></div></div>";
   }
   // 사진: 작게(가로 60%), 탭하면 전체화면 확대
   if(img){
-    h+="<div style='max-width:230px;margin:0 auto 9px'><div class='sc-img' onclick=\"scImgZoom('"+esc(img)+"')\">"
+    h+="<div style='max-width:290px;margin:0 auto 9px'><div class='sc-img' onclick=\"scImgZoom('"+esc(img)+"')\">"
       + "<img src='"+esc(img)+"' alt=''>"
       + "<div style='position:absolute;right:7px;bottom:7px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px'>🔍 크게</div>"
       + "</div></div>";
