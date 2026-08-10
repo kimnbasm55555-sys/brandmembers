@@ -1385,7 +1385,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.41";
+const CUST_APP_VERSION = "5.9.43";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 // 카톡 등 인앱 브라우저는 타 도메인 iframe(착한창업)을 차단 → 안내 화면 HTML 반환 (아니면 "")
@@ -1393,11 +1393,15 @@ function _benefitInappGuide(){
   var inapp=false;
   try{ inapp = (typeof _custInappName==="function") && !!_custInappName(); }catch(e){}
   if(!inapp) return "";
-  return "<div style='padding:44px 26px;text-align:center'>"
-    + "<div style='font-size:44px;margin-bottom:10px'>🧭</div>"
-    + "<div style='font-size:17px;font-weight:900;color:#1a1d24;margin-bottom:7px'>착한창업은 앱에서 열려요</div>"
-    + "<div style='font-size:13px;color:#6b7280;line-height:1.6;margin-bottom:20px'>지금은 카카오톡 안이라 이 화면이<br>바로 안 열려요. 앱으로 열면 정상적으로 보여요.</div>"
-    + "<button onclick=\"if(typeof custInappOpen==='function')custInappOpen()\" style='width:100%;max-width:260px;padding:14px;border:none;background:#3b4cca;color:#fff;border-radius:12px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer'>앱으로 열기</button>"
+  // ※ '설치'라는 말을 쓰지 않는다 — 손님이 "또 설치해야 하나?"로 오해하기 때문.
+  //   지금 화면이 카카오톡 안(인앱 브라우저)이라 이 항목만 안 열린다는 점,
+  //   그리고 '이 창을 닫고 평소 쓰던 브랜드멤버스에서 열면 된다'는 점만 안내.
+  return "<div style='padding:40px 26px;text-align:center'>"
+    + "<div style='font-size:42px;margin-bottom:12px'>💬</div>"
+    + "<div style='font-size:16.5px;font-weight:900;color:#1a1d24;margin-bottom:9px'>이 화면은 카카오톡 안에서는<br>열리지 않아요</div>"
+    + "<div style='font-size:13px;color:#6b7280;line-height:1.7;margin-bottom:8px'>오류가 아니에요! 카카오톡 안(미리보기)에서는<br>이 항목만 표시가 제한돼요.</div>"
+    + "<div style='font-size:13.5px;color:#3b4cca;font-weight:800;line-height:1.7;margin-bottom:22px'>이 창을 닫고,<br>브랜드멤버스 앱(또는 인터넷 브라우저)에서<br>착한창업을 열어 확인해 주세요 😊</div>"
+    + "<div style='font-size:11.5px;color:#9aa3af;line-height:1.6'>홈 화면에 브랜드멤버스 앱이 있으면 그 앱에서,<br>없으면 사파리·크롬 같은 브라우저에서 열면 돼요</div>"
     + "</div>";
 }
 
@@ -2634,6 +2638,45 @@ function _pwaLikelyInstalled(){
   return false;
 }
 
+// ══════ 카톡 인앱 상황별 유도 배너 (소식 아래, 눈에 띄는 색) ══════
+// · 인앱 + 미설치  → "앱 설치하면 더 편해요" (초록, 설치 유도)
+// · 인앱 + 설치함  → "설치한 앱에서 열면 알림·더 많은 기능" (보라, 앱으로 유도)
+// · 일반 브라우저/설치앱에서 열림 → 배너 없음(빈 문자열)
+function _newsCtaBanner(){
+  var inapp=false;
+  try{ inapp = (typeof _custInappName==="function") && !!_custInappName(); }catch(e){}
+  if(!inapp) return "";   // 카톡 등 인앱에서만 노출 (일반 환경은 이미 최적)
+
+  var installed=false;
+  try{ installed = _pwaLikelyInstalled(); }catch(e){}
+  // 아이폰 인앱은 설치 여부 감지가 불가(저장소 분리) → '설치했다면/안 했다면' 둘 다 담은 안내
+  var iOSInapp=false;
+  try{ iOSInapp = _pwaIsIos && _pwaIsIos() && inapp && !installed; }catch(e){}
+
+  if(installed){
+    // 설치 확실(주로 안드로이드) → 앱으로 열기 유도 (보라)
+    return "<div style='margin-top:11px;background:linear-gradient(135deg,#6d5df6,#8f7bff);border-radius:12px;padding:13px 14px;color:#fff'>"
+      + "<div style='font-size:13.5px;font-weight:800'>📲 설치한 앱에서 열면 더 좋아요</div>"
+      + "<div style='font-size:11.5px;opacity:.92;margin-top:3px;line-height:1.55'>새 쿠폰·이벤트 알림을 받고, 로그인도 계속 유지돼요</div>"
+      + "<button onclick=\"if(typeof custInappOpen==='function')custInappOpen()\" style='width:100%;margin-top:10px;padding:11px;border:none;background:#fff;color:#5b4fd6;border-radius:9px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer'>앱에서 열기</button>"
+      + "</div>";
+  }
+  if(iOSInapp){
+    // 아이폰 인앱 + 감지불가 → 설치했으면 앱에서, 안 했으면 설치 (둘 다 안내)
+    return "<div style='margin-top:11px;background:linear-gradient(135deg,#12b886,#20c997);border-radius:12px;padding:13px 14px;color:#fff'>"
+      + "<div style='font-size:13.5px;font-weight:800'>🎁 앱으로 열면 더 편해요</div>"
+      + "<div style='font-size:11.5px;opacity:.94;margin-top:3px;line-height:1.55'>이미 앱을 설치했다면 홈 화면 앱에서 열어주세요.<br>아직 없다면 앱을 추가하면 새 쿠폰·알림을 놓치지 않아요.</div>"
+      + "<button onclick=\"if(typeof pwaOpenInstall==='function')pwaOpenInstall()\" style='width:100%;margin-top:10px;padding:11px;border:none;background:#fff;color:#0e9d6e;border-radius:9px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer'>앱 추가 / 열기 방법 보기</button>"
+      + "</div>";
+  }
+  // 인앱 + 미설치(안드로이드 감지) → 설치 유도 (초록)
+  return "<div style='margin-top:11px;background:linear-gradient(135deg,#12b886,#20c997);border-radius:12px;padding:13px 14px;color:#fff'>"
+    + "<div style='font-size:13.5px;font-weight:800'>🎁 앱을 설치하면 더 편하게 쓸 수 있어요</div>"
+    + "<div style='font-size:11.5px;opacity:.94;margin-top:3px;line-height:1.55'>홈 화면에 추가하면 새 쿠폰·이벤트 알림을 바로 받아요</div>"
+    + "<button onclick=\"if(typeof pwaOpenInstall==='function')pwaOpenInstall()\" style='width:100%;margin-top:10px;padding:11px;border:none;background:#fff;color:#0e9d6e;border-radius:9px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer'>앱 설치하기</button>"
+    + "</div>";
+}
+
 // ══════════ 앱 설치 의무 게이트 ══════════
 // 설치 안 하면 앱을 못 쓰게 막는다 (손님·직원·사장 공통).
 // 단, 감지 오류로 갇힌 사람을 위해 '이미 설치했어요' 탈출구를 둔다.
@@ -3163,6 +3206,8 @@ function _storeNewsHtml(code){
       h+="<button onclick=\"shareEventKakao('"+esc(code)+"')\" style='width:100%;margin-top:9px;padding:12px;border:none;background:#FEE500;color:#3c1e1e;border-radius:10px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer'>🔥 친구에게 공유하기</button>";
     }
   }
+  // 카톡 인앱이면 소식 아래에 상황별 유도 배너 (미설치=설치 유도 / 설치=앱으로 유도)
+  h+=_newsCtaBanner();
   h+="</div>";
   return h;
 }
