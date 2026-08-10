@@ -1142,13 +1142,17 @@
 
     <!-- ===== 착한창업 탭 (index 연결) ===== -->
     <div class="cust-page" id="cpage-benefit">
-      <div id="mad-benefit" class="home-sec"></div>
+      <!-- 광고: 스크롤 시 부드럽게 접혀 사라짐 (B방식) -->
+      <div id="mad-benefit-wrap" class="ben-adwrap"><div id="mad-benefit" class="home-sec" style="padding:0 14px"></div></div>
       <div id="custBenefitHost"><div class="empty" style="padding:50px 0;text-align:center;color:#8a909a">착한창업을 불러오는 중…</div></div>
     </div>
     <style>
-      /* 착한창업 탭: iframe을 헤더 아래 ~ 탭바 위 전체에 꽉 채움 (노트앱과 동일 크기·자체 스크롤) */
-      #cpage-benefit.on{position:fixed;left:50%;transform:translateX(-50%);top:88px;bottom:64px;width:100%;max-width:460px;z-index:5;background:#fff}
-      #cpage-benefit #custBenefitHost{height:100%}
+      /* 착한창업 탭: 헤더 아래 ~ 탭바 위 영역을 세로로 채움 (광고 + iframe) */
+      #cpage-benefit.on{position:fixed;left:50%;transform:translateX(-50%);top:88px;bottom:64px;width:100%;max-width:460px;z-index:5;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+      /* 광고 래퍼: 스크롤 시작하면 높이가 0으로 접힘 (부드럽게) */
+      #cpage-benefit .ben-adwrap{flex:0 0 auto;max-height:200px;overflow:hidden;transition:max-height .32s ease,opacity .28s ease,padding .28s ease;opacity:1;padding-top:10px}
+      #cpage-benefit .ben-adwrap.collapsed{max-height:0;opacity:0;padding-top:0}
+      #cpage-benefit #custBenefitHost{flex:1 1 auto;min-height:0}
       #cpage-benefit #custBenefitHost iframe{width:100%;height:100%;border:0;display:block}
     </style>
 
@@ -1385,7 +1389,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.44";
+const CUST_APP_VERSION = "5.9.46";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 // 카톡 등 인앱 브라우저는 타 도메인 iframe(착한창업)을 차단 → 안내 화면 HTML 반환 (아니면 "")
@@ -2847,9 +2851,22 @@ window.addEventListener("message", function(ev){
       // 내정보 화면이 열려있으면 찜 목록 갱신
       try{ if(typeof _renderMeFav==="function") _renderMeFav(); }catch(e){}
     }
+    // 착한창업 iframe 스크롤 → 상단 광고 접기/펼치기 (B방식)
+    if(d && d.type==="benScroll"){
+      var w=document.getElementById("mad-benefit-wrap");
+      if(w){ w.classList.toggle("collapsed", !!d.collapse); }
+    }
   }catch(e){}
 });
-function doLogout(){ if(PEEK_MODE){ toast("미리보기 화면입니다"); return; } if(DEMO_MODE){ toast("데모 화면입니다"); return; } try{ localStorage.removeItem("cust_hash"); }catch(e){} location.reload(); }
+async function doLogout(){
+  if(PEEK_MODE){ toast("미리보기 화면입니다"); return; }
+  if(DEMO_MODE){ toast("데모 화면입니다"); return; }
+  try{ localStorage.removeItem("cust_hash"); }catch(e){}
+  // 구글 로그인 세션도 함께 종료 (안 하면 새로고침 시 구글로 자동 재로그인됨)
+  try{ await sb.auth.signOut(); }catch(e){}
+  try{ _gAuthUser=null; }catch(e){}
+  location.reload();
+}
 
 // ── 회원탈퇴 (모든 스탬프·쿠폰·선물·회원정보 삭제) ──
 async function doWithdraw(){
