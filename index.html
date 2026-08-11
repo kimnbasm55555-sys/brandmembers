@@ -1389,7 +1389,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.47";
+const CUST_APP_VERSION = "5.9.48";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 // 카톡 등 인앱 브라우저는 타 도메인 iframe(착한창업)을 차단 → 안내 화면 HTML 반환 (아니면 "")
@@ -1517,6 +1517,19 @@ function onDongChange(){
 }
 
 function $(id){ return document.getElementById(id); }
+// ── 인트로 재노출 방지 ──
+// 이미 시작(로그인/세션 있음) 또는 인트로를 한 번 본 폰이면, 페이지가 다시 로드돼도
+// (예: 외부 링크 보고 뒤로가기) 인트로 화면을 처음부터 숨긴 채로 시작한다.
+(function hideIntroIfReturning(){
+  try{
+    var seen = localStorage.getItem("bm_intro_seen")==="1";
+    var hasSession = !!localStorage.getItem("cust_hash");
+    if(seen || hasSession){
+      var iv=document.getElementById("introView");
+      if(iv){ iv.classList.add("hidden"); }
+    }
+  }catch(e){}
+})();
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];}); }
 var ICON_CHECK="<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>";
 function toast(msg){ var t=$("toast"); t.innerHTML=ICON_CHECK+"<span>"+esc(msg)+"</span>"; t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},2200); }
@@ -2200,7 +2213,7 @@ function resetAuthBtn(){
   else if($("loginPwWrap")&&!$("loginPwWrap").classList.contains("hidden")){ $("authBtn").textContent="로그인"; }
   else{ $("authBtn").textContent="시작하기"; }
 }
-function saveSession(ph){ if(PEEK_MODE) return; try{ localStorage.setItem("cust_hash",ph); }catch(e){} }
+function saveSession(ph){ if(PEEK_MODE) return; try{ localStorage.setItem("cust_hash",ph); localStorage.setItem("bm_intro_seen","1"); }catch(e){} }
 
 // ══════════ 역할 기억 (설치 후 파라미터가 사라져도 '직원'을 잊지 않기) ══════════
 // 1겹: 로컬 기억 — 초대링크·직원QR로 들어온 순간 저장 (설치 앱이 열릴 때 참조)
@@ -2369,6 +2382,7 @@ function loadSession(){ try{ return localStorage.getItem("cust_hash"); }catch(e)
 // 인트로 "시작하기" → 인트로 숨기고 다음 화면(가입/매장선택)으로
 function introStart(){
   var iv=$("introView"); if(iv){ iv.classList.add("hidden"); }
+  try{ localStorage.setItem("bm_intro_seen","1"); }catch(e){}
 }
 function hideIntro(){ var iv=$("introView"); if(iv){ iv.classList.add("hidden"); } }
 
