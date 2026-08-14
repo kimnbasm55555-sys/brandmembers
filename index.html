@@ -1139,7 +1139,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.48";
+const CUST_APP_VERSION = "5.9.49";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 // 카톡 등 인앱 브라우저는 타 도메인 iframe(착한창업)을 차단 → 안내 화면 HTML 반환 (아니면 "")
@@ -3715,23 +3715,10 @@ async function enterMain(){
   // ── 파라미터 없음(설치된 앱 실행): 역할 기억으로 직원 판단 ──
   //   설치 앱은 start_url 때문에 ?store/?join이 사라진다. 그래서:
   //   1겹(로컬 기억 bn_role_ctx) + 2겹(DB person_roles)으로 "이 사람 직원인가?"를 복원한다.
-  if(!DEMO_MODE && !STORE_CODE && CUST && CUST.phone_hash){
-    var myRoles=await findMyStaffRoles(CUST.phone_hash);
-    if(myRoles.length){
-      var ctx=loadRoleCtx();
-      // 로컬 기억의 매장이 실제 역할 목록에 있으면 그 매장, 없으면 첫 매장
-      var pick=myRoles[0];
-      if(ctx && ctx.store){
-        var m=myRoles.filter(function(r){ return r.store_code===ctx.store; });
-        if(m.length) pick=m[0];
-      }
-      STORE_CODE=pick.store_code;
-      STORE_NAME=await loadStoreName(STORE_CODE);
-      saveRoleCtx(STORE_CODE, pick.role);
-      showStaffRedirect();
-      return;
-    }
-  }
+  // ★ 로그인 후 '직원 판정 → 브랜드노트로 튕기기' 로직은 제거함.
+  //   브랜드멤버스는 손님 전용 앱이므로, 어느 매장 직원인 사람도
+  //   다른 가게(또는 자기 가게)의 '손님'으로 스탬프·쿠폰을 쓸 수 있어야 한다.
+  //   직원 업무(출퇴근·계약서)는 브랜드노트에서만 처리한다.
 
   $("authView").classList.add("hidden");
   $("mainView").classList.remove("hidden");
@@ -4440,15 +4427,10 @@ function closeEmpContractFill(){
   CONTRACT_ID="";
   showStaffOrGuest();
 }
-// 작성 취소/완료 후 원래 화면으로 (직원이면 직원홈)
+// 작성 취소/완료 후 원래 화면으로
+// ★ 손님 전용 앱이므로 항상 손님 화면으로 (직원 화면 분기 제거)
 async function showStaffOrGuest(){
-  try{
-    if(CUST && CUST.phone_hash){
-      var roles=await findMyStaffRoles(CUST.phone_hash);
-      if(roles.length){ STORE_CODE=roles[0].store_code; STORE_NAME=await loadStoreName(STORE_CODE); showStaffClock(roles[0].role); return; }
-    }
-  }catch(e){}
-  $("empContractView").classList.add("hidden");
+  $("empContractView") && $("empContractView").classList.add("hidden");
   await enterMain();
 }
 
@@ -6390,12 +6372,8 @@ async function demoEnter(){
   BOX_MODE=bp.box; BOX_BRAND=bp.brand;
   try{ DEMO_MODE=(new URLSearchParams(location.search).get("demo")==="1"); }catch(e){}
 
-  // ── 역할 기억 저장 (설치 게이트로 끊기기 전에!) ──
-  //   초대링크·직원QR로 들어온 순간 이 폰에 '직원 컨텍스트'를 남긴다.
-  //   설치 후 앱을 열면 파라미터가 사라지지만, 이 기억으로 직원 화면을 복원한다.
-  if((JOIN_ARRIVAL || WORK_MODE) && STORE_CODE){
-    saveRoleCtx(STORE_CODE, JOIN_ROLE||"staff");
-  }
+  // ★ 직원 역할 기억 저장은 제거함 — 브랜드멤버스는 손님 전용 앱이라
+  //   이 폰에 '직원' 컨텍스트를 남기면 안 됨 (직원은 브랜드노트를 사용)
 
   // ── 구글 로그인 세션 감지 (구글에서 돌아왔을 때) ──
   var _gHandled=false;
@@ -6418,11 +6396,12 @@ async function demoEnter(){
   try{
     _oauthReturning = /access_token=|[?&]code=/.test(location.hash+location.search);
   }catch(e){}
-  var _staffArrival = JOIN_ARRIVAL || WORK_MODE || !!CONTRACT_ID || !!RESIGN_ID;
-  // ★ 손님은 설치 강제 게이트 제거 — 설치 없이 바로 이용, 설치는 부드러운 배너로만 권유.
-  //   직원(출퇴근·초대·계약)만 설치가 필요하므로 게이트 유지.
-  if(_staffArrival && _shouldGateInstall() && !_oauthReturning){
-    showInstallGate();
+  var _staffArrival = JOIN_ARRIVAL || WORK_MODE || !!CONTRACT_ID || !!RESIGN_ID || !!SUB_ID;
+  // ★ 직원용 링크(계약서·사직서·출퇴근·초대·대타)로 들어온 사람은 여기서 즉시 브랜드노트로 안내.
+  //   브랜드멤버스는 손님(스탬프·쿠폰) 전용 앱이므로, 직원에게 이 앱 설치·가입을 시키면 안 된다.
+  //   (예전에는 설치 게이트가 떠서 직원이 고객앱을 설치하게 되는 문제가 있었음)
+  if(_staffArrival){
+    showStaffRedirect();
     return;
   }
 
@@ -6519,8 +6498,11 @@ async function demoEnter(){
   $("inPhone").addEventListener("keydown",function(e){ if(e.key==="Enter") doAuth(); });
   // ── 온보딩 인트로: 직원이면 직원스럽게, 손님이면 손님스럽게 (브랜드노트 톤) ──
   //   파라미터가 없어도(설치 앱 첫 실행) 로컬 역할 기억(bn_role_ctx)이 있으면 직원 인트로를 복원한다.
-  var _ctx=(!JOIN_ARRIVAL && !WORK_MODE && !STORE_CODE) ? loadRoleCtx() : null;
-  var _staffIntro = JOIN_ARRIVAL || WORK_MODE || !!(_ctx && _ctx.store);
+  // ★ 브랜드멤버스는 손님 전용 앱 — 직원 인트로 복원을 하지 않는다.
+  //   예전 버전에서 이 폰에 저장된 직원 기억(bn_role_ctx)이 있으면 지운다.
+  try{ localStorage.removeItem("bn_role_ctx"); }catch(e){}
+  var _ctx=null;
+  var _staffIntro=false;
   var _ctxStoreName = "";
   if(_ctx && _ctx.store){ try{ _ctxStoreName=await loadStoreName(_ctx.store); }catch(e){} }
   var _storeLabel = esc(STORE_NAME || _ctxStoreName || "우리 매장");
