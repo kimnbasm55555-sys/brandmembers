@@ -1,4 +1,43 @@
 <!DOCTYPE html>
+<!--
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║   ██  브랜드멤버스 (BRANDMEMBERS) — 손님용 앱                         ║
+║                                                                       ║
+║   서비스 : 브랜드멤버스                                               ║
+║   저장소 : github.com/kimnbasm55555-sys/brandmembers                  ║
+║   주소   : https://brandmembers.vercel.app                            ║
+║   DB     : bgnercejwbhutpxpckbs  (고객 DB · 쓰기)                     ║
+║            ddieqwwnqokwzluufqda  (브랜드노트 DB · 광고/매장 읽기전용) ║
+║                                                                       ║
+║   ※ '브랜드노트'가 아닙니다. 헷갈리지 마세요.                         ║
+║      브랜드노트는 완전히 분리된 별도 서비스입니다.                    ║
+║      - 저장소 : github.com/kimnbasm55555-sys/brandnote                ║
+║      - 주소   : https://brandnote-zeta.vercel.app                     ║
+║      - DB     : ddieqwwnqokwzluufqda                                  ║
+║      직원용 링크로 들어온 사람은 브랜드노트로 안내만 하고 끝냅니다.   ║
+║                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+  [이 앱의 역할]  손님 전용
+    · 스탬프 적립 / 쿠폰 발급·사용 / 쿠폰 선물
+    · 단골 매장 소식 · 이벤트 확인
+    · 여러 매장을 상단 탭으로 전환
+
+  [하면 안 되는 것]
+    · 직원 기능(출퇴근·근로계약서·직원등록)을 여기서 처리하지 않습니다.
+      → 직원용 테이블(attendance, labor_contracts, memberships 등)은
+        코드 상단의 sb 프록시가 접근을 원천 차단합니다.
+    · 직원에게 이 앱 설치·가입을 유도하지 않습니다.
+
+  [DB 사용 원칙]
+    sb      = 고객 DB   — 스탬프·쿠폰·고객 (쓰기)
+    sbRead  = 브랜드노트 DB — 광고·매장 정보 (읽기 전용)
+
+  [배포]
+    이 파일 1개만 brandmembers 저장소에 올리면 됩니다.
+    (브랜드노트의 version.json 과는 무관합니다)
+-->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -1131,7 +1170,46 @@
 // ============================================================
 const SUPABASE_URL = "https://bgnercejwbhutpxpckbs.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnbmVyY2Vqd2JodXRweHBja2JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTE3MzIsImV4cCI6MjEwMTQ4NzczMn0.LzkUX7zOab9NNDAG2_cFCy5byF4AmQMNn2AuK8xQ8D4";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const _sbRaw = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ★★ 직원용 테이블 접근 차단 (브랜드멤버스는 손님 전용 서비스) ★★
+   브랜드멤버스는 브랜드노트와 완전히 분리된 별도 서비스이며, 고객 DB만 사용합니다.
+   예전 고객앱 시절 코드가 남아 있어 직원용 테이블(근로계약서·출퇴근·직원목록)을
+   고객 DB에서 읽고 쓰려는 곳이 있는데, 이 테이블들은 브랜드노트 DB에 있어야 합니다.
+   실수로 호출되더라도 고객 DB가 오염되지 않도록 여기서 원천 차단합니다.
+   (직원 기능은 브랜드노트 앱에서만 동작합니다)                                */
+const _STAFF_ONLY_TABLES = [
+  "attendance", "labor_contracts", "memberships", "resignations",
+  "person_roles", "persons", "sub_requests", "schedules", "invites",
+  "emp_files", "store_journals", "push_queue"
+];
+const sb = new Proxy(_sbRaw, {
+  get: function(target, prop){
+    if(prop === "from"){
+      return function(table){
+        if(_STAFF_ONLY_TABLES.indexOf(table) >= 0){
+          console.warn("[브랜드멤버스] 직원용 테이블 접근 차단:", table, "— 직원 기능은 브랜드노트 앱에서 이용하세요.");
+          // 아무것도 하지 않는 가짜 응답 (오류 없이 조용히 통과)
+          var noop = {
+            select:function(){ return noop; }, insert:function(){ return noop; },
+            update:function(){ return noop; }, upsert:function(){ return noop; },
+            delete:function(){ return noop; }, eq:function(){ return noop; },
+            neq:function(){ return noop; }, is:function(){ return noop; },
+            in:function(){ return noop; },  gte:function(){ return noop; },
+            lte:function(){ return noop; }, order:function(){ return noop; },
+            limit:function(){ return noop; }, single:function(){ return noop; },
+            maybeSingle:function(){ return noop; },
+            then:function(res){ return Promise.resolve({ data:null, error:null }).then(res); }
+          };
+          return noop;
+        }
+        return target.from(table);
+      };
+    }
+    var v = target[prop];
+    return (typeof v === "function") ? v.bind(target) : v;
+  }
+});
 // ── 브랜드노트(운영) DB — 광고·매장정보 '읽기 전용' ──
 //   본사가 HQ에서 올린 광고(ext_ad_banners)와 매장/브랜드 정보를 여기서 읽어온다.
 //   스탬프·쿠폰·고객가입은 위 sb(고객 DB)에만 쓴다.
@@ -1139,7 +1217,7 @@ const BN_URL = "https://ddieqwwnqokwzluufqda.supabase.co";
 const BN_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkaWVxd3ducW9rd3psdXVmcWRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODQ2NzIsImV4cCI6MjA5OTc2MDY3Mn0.Bgi59yCVb8bAw8wsGzKo2T3UGZgW1A-HtVbj0QxM4K8";
 const sbRead = window.supabase.createClient(BN_URL, BN_KEY);
 // 앱 버전 (배포할 때 service-worker.js CACHE_VERSION과 함께 올리세요)
-const CUST_APP_VERSION = "5.9.49";
+const CUST_APP_VERSION = "5.9.51";
 // 착한창업은 브랜드노트 앱에 있음 → iframe으로 그 주소를 불러옴 (멤버스 자신 아님!)
 const BN_APP_URL = "https://brandnote-zeta.vercel.app";
 // 카톡 등 인앱 브라우저는 타 도메인 iframe(착한창업)을 차단 → 안내 화면 HTML 반환 (아니면 "")
